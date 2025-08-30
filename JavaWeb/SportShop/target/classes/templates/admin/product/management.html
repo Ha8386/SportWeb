@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Quản lý Sản Phẩm</title>
+    <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+            rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+    <link rel="stylesheet" th:href="@{/css/productManagement.css}" />
+</head>
+<body>
+    <div class="container">
+    <!-- Sidebar -->
+    <nav>
+        <div class="logo">
+            <img th:src="@{/image/logo.jpg}" alt="Logo" />
+        </div>
+        <a href="/admin" class="nav-link">
+            <i class="fas fa-home"></i><span>Trang Quản Trị</span>
+        </a>
+        <a href="/admin/user" class="nav-link">
+            <i class="fas fa-users"></i><span>Quản Lý Người Dùng</span>
+        </a>
+
+        <!-- Product Management with Dropdown -->
+        <div class="product-menu">
+            <a href="#" class="nav-link" onclick="toggleProductMenu(event)">
+                <div>
+                    <i class="fas fa-box"></i><span>Quản Lý Sản Phẩm</span>
+                </div>
+            </a>
+            <div class="submenu" id="productSubmenu">
+                <a href="/admin/product" class="nav-link">
+                    <i class="fas fa-cube"></i><span>Sản Phẩm</span>
+                </a>
+                <a href="/admin/category" class="nav-link">
+                    <i class="fas fa-tags"></i><span>Danh Mục</span>
+                </a>
+                <a href="/admin/brand" class="nav-link">
+                    <i class="fas fa-certificate"></i><span>Thương Hiệu</span>
+                </a>
+            </div>
+        </div>
+
+        <a href="/admin/order" class="nav-link">
+            <i class="fas fa-shopping-cart"></i><span>Quản Lý Đơn Hàng</span>
+        </a>
+    </nav>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Quản Lý Sản Phẩm</h1>
+            <div class="header-actions">
+                <!-- Thêm form tìm kiếm này vào sau <div class="product-view-selector"> và trước form upload Excel -->
+                <form method="get" style="display: flex; align-items: center; margin: 0 10px;">
+                    <div class="search-box">
+                        <input type="text"
+                               name="name"
+                               placeholder="Tìm kiếm sản phẩm..."
+                               th:value="${param.name}"
+                               style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 250px;">
+                        <button type="submit" style="padding: 8px 12px; margin-left: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            <i class="fas fa-search"></i> Tìm
+                        </button>
+                    </div>
+                    <!-- Giữ lại các tham số khác khi tìm kiếm -->
+                    <input type="hidden" name="page" th:value="${param.page ?: 0}">
+                    <input type="hidden" name="size" th:value="${param.size ?: 10}">
+                    <input type="hidden" name="sortField" th:value="${param.sortField ?: 'id'}">
+                    <input type="hidden" name="sortDir" th:value="${param.sortDir ?: 'asc'}">
+                </form>
+                <div class="product-view-selector">
+                    <select id="productViewSelect" onchange="toggleProductView()">
+                        <option value="active">Sản phẩm đang hoạt động</option>
+                        <option value="deleted">Sản phẩm đã xóa gần đây</option>
+                    </select>
+                </div>
+                <!-- Upload Excel Button -->
+<!--                <form-->
+<!--                        th:action="@{/admin/product/add/upload}"-->
+<!--                        method="post"-->
+<!--                        enctype="multipart/form-data"-->
+<!--                        style="display: flex; align-items: center; margin: 0;"-->
+<!--                >-->
+<!--                    <label for="excelFile" class="upload-excel-btn" style="cursor: pointer; margin: 0;">-->
+<!--                        <i class="fas fa-file-excel"></i> Tạo qua Excel-->
+<!--                    </label>-->
+<!--                    <input type="file" id="excelFile" name="file" accept=".xlsx,.xls"-->
+<!--                           style="display: none;" onchange="this.form.submit()" />-->
+<!--                </form>-->
+                <!-- Create Product Button -->
+                <button class="btn create-btn" onclick="openCreateModal()">
+                    <i class="fas fa-plus"></i>
+                    Tạo Sản Phẩm Mới
+                </button>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div th:if="${notification}" class="alert" role="alert">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${notification}"></span>
+        </div>
+
+        <div th:if="${message}" class="alert" role="alert">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${message}"></span>
+        </div>
+
+        <div id="activeProductsContainer" class="table-container">
+            <table>
+                <thead>
+                <tr>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortTable('id')">
+                            Mã sản phẩm
+                            <span id="sort-icon-id"></span>
+                        </a>
+                    </th>
+                    <th>
+                    <a href="#" class="sortable-link">
+                        Thương hiệu
+                        <span id="sort-icon-brand"></span>
+                    </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link">
+                            Danh mục
+                            <span id="sort-icon-category"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortTable('name')">
+                            Tên sản phẩm
+                            <span id="sort-icon-name"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortTable('color')">
+                            Màu sắc
+                            <span id="sort-icon-color"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortTable('price')">
+                            Giá(VND)
+                            <span id="sort-icon-price"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortTable('discount')">
+                            Giảm giá(%)
+                            <span id="sort-icon-discount"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortTable('quantity')">
+                            Số lượng
+                            <span id="sort-icon-quantity"></span>
+                        </a>
+                    </th>
+                    <th>
+                    <a href="#" class="sortable-link" onclick="sortTable('description')">
+                        Mô tả
+                        <span id="sort-icon-description"></span>
+                    </a>
+                    </th>
+                    <th>Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="product : ${products}">
+                    <td th:text="${product.id}"></td>
+                    <td th:text="${product.brand.name}"></td>
+                    <td th:text="${product.category.name}"></td>
+                    <td th:text="${product.name}"></td>
+                    <td th:text="${product.color}"></td>
+                    <td th:text="${#numbers.formatInteger(product.price, 3, 'POINT')} + ' VND'"></td>
+                    <td th:text="${product.discount}"></td>
+                    <td th:text="${product.quantity}"></td>
+                    <td th:text="${product.description}"></td>
+                    <td>
+                        <a
+                                th:href="@{/admin/product/{id}(id=${product.id})}"
+                                class="action-btn view-btn"
+                        >
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a
+                                class="action-btn btn btn-warning"
+                                th:href="@{'/admin/product/update/' + ${product.id}}"
+                        >
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button
+                                type="button"
+                                class="action-btn copy-btn"
+                                th:onclick="'copyProduct(' + ${product.id} + ')'"
+                                title="Sao chép sản phẩm"
+                        >
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button
+                                type="button"
+                                class="action-btn btn-danger"
+                                th:onclick="'softDeleteProduct(' + ${product.id} + ')'"
+                        >
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <ul>
+                    <li th:if="${productPage.hasPrevious()}">
+                        <a th:href="@{/admin/product(page=${productPage.number - 1}, size=${param.size}, sortField=${param.sortField}, sortDir=${param.sortDir}, name=${param.name})}">« Trước</a>
+                    </li>
+                    <li th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}"
+                        th:classappend="${i == productPage.number} ? 'active'">
+                        <a th:href="@{/admin/product(page=${i}, size=${param.size}, sortField=${param.sortField}, sortDir=${param.sortDir}, name=${param.name})}" th:text="${i + 1}"></a>
+                    </li>
+                    <li th:if="${productPage.hasNext()}">
+                        <a th:href="@{/admin/product(page=${productPage.number + 1}, size=${param.size}, sortField=${param.sortField}, sortDir=${param.sortDir}, name=${param.name})}">Tiếp »</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Table cho sản phẩm đã xóa -->
+        <div id="deletedProductsContainer" class="table-container hidden">
+            <table>
+                <thead>
+                <tr>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortDeletedTable('id')">
+                            Mã sản phẩm
+                            <span id="sort-id"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link">
+                            Thương hiệu
+                            <span id="sort-brand"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link">
+                            Danh mục
+                            <span id="sort-category"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortDeletedTable('name')">
+                            Tên sản phẩm
+                            <span id="sort-name"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortDeletedTable('color')">
+                            Màu sắc
+                            <span id="sort-color"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortDeletedTable('price')">
+                            Giá(VND)
+                            <span id="sort-price"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortDeletedTable('discount')">
+                            Giảm giá(%)                          <span id="sort-discount"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortDeletedTable('quantity')">
+                            Số lượng
+                            <span id="sort-quantity"></span>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="#" class="sortable-link" onclick="sortDeletedTable('description')">
+                            Mô tả
+                            <span id="sort-description"></span>
+                        </a>
+                    </th>
+                    <th>Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="productDeleted : ${productsDeleted}">
+                    <td th:text="${productDeleted.id}"></td>
+                    <td th:text="${productDeleted.brand.name}"></td>
+                    <td th:text="${productDeleted.category.name}"></td>
+                    <td th:text="${productDeleted.name}"></td>
+                    <td th:text="${productDeleted.color}"></td>
+                    <td th:text="${#numbers.formatInteger(productDeleted.price, 3, 'POINT')} + ' VND'"></td>
+                    <td th:text="${productDeleted.discount}"></td>
+                    <td th:text="${productDeleted.quantity}"></td>
+                    <td th:text="${productDeleted.description}"></td>
+                    <td>
+                        <button
+                                type="button"
+                                class="action-btn restore-btn"
+                                th:onclick="'restoreProduct(' + ${productDeleted.id} + ')'"
+                        >
+                            <i class="fas fa-undo"></i>
+                        </button>
+
+                        <button
+                                type="button"
+                                class="action-btn btn-danger"
+                                th:onclick="'deleteProduct(' + ${productDeleted.id} + ')'"
+                        >
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <ul>
+                    <li th:if="${productDeletedPage.hasPrevious()}">
+                        <a th:href="@{/admin/product(page=${productDeletedPage.number - 1}, size=${param.size}, sortField=${param.sortField}, sortDir=${param.sortDir}, name=${param.name})}">« Trước</a>
+                    </li>
+                    <li th:each="i : ${#numbers.sequence(0, productDeletedPage.totalPages - 1)}"
+                        th:classappend="${i == productDeletedPage.number} ? 'active'">
+                        <a th:href="@{/admin/product(page=${i}, size=${param.size}, sortField=${param.sortField}, sortDir=${param.sortDir}, name=${param.name})}" th:text="${i + 1}"></a>
+                    </li>
+                    <li th:if="${productDeletedPage.hasNext()}">
+                        <a th:href="@{/admin/product(page=${productDeletedPage.number + 1}, size=${param.size}, sortField=${param.sortField}, sortDir=${param.sortDir}, name=${param.name})}">Tiếp »</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+    <!-- Create Product Modal -->
+    <div id="createProductModal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2><i class="fas fa-plus-circle"></i> Tạo Sản Phẩm Mới</h2>
+            <button class="modal-close" onclick="closeCreateModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form
+                    th:action="@{/admin/product/create}"
+                    th:object="${newProduct}"
+                    method="POST"
+                    enctype="multipart/form-data"
+                    id="createProductForm"
+            >
+                <div class="modal-form-grid">
+                    <!-- Image Upload Section -->
+                    <div class="modal-image-upload">
+                        <h3 class="modal-section-title">
+                            <i class="fas fa-images"></i> Ảnh sản phẩm
+                        </h3>
+                        <div class="modal-image-preview-container">
+                            <div id="modalImagePreviewGrid" class="modal-image-preview-grid">
+                                <!-- Preview images sẽ được thêm vào đây bằng JavaScript -->
+                            </div>
+                            <div class="modal-upload-container">
+                                <input
+                                        type="file"
+                                        id="modalFiles"
+                                        name="files"
+                                        accept="image/*"
+                                        multiple
+                                        style="display: none"
+                                        onchange="previewModalImages(event)"
+                                        required
+                                />
+                                <button
+                                        type="button"
+                                        class="modal-upload-btn"
+                                        onclick="document.getElementById('modalFiles').click()"
+                                >
+                                    <i class="fas fa-upload"></i> Tải ảnh lên
+                                </button>
+                                <p style="font-size: 12px; color: #666; margin-top: 5px;">Có thể chọn nhiều ảnh</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Info Section -->
+                    <div class="modal-form-section">
+                        <h3 class="modal-section-title">
+                            <i class="fas fa-info-circle"></i> Thông tin sản phẩm
+                        </h3>
+
+                        <div class="modal-form-row">
+                            <div class="modal-form-group">
+                                <label><i class="fas fa-trademark"></i> Thương hiệu</label>
+                                <select th:field="*{brandId}" required>
+                                    <option value="">-- Chọn thương hiệu --</option>
+                                    <option
+                                            th:each="brand : ${brands}"
+                                            th:value="${brand.id}"
+                                            th:text="${brand.name}"
+                                    ></option>
+                                </select>
+                            </div>
+                            <div class="modal-form-group">
+                                <label><i class="fas fa-folder"></i> Danh mục</label>
+                                <select th:field="*{categoryId}" required>
+                                    <option value="">-- Chọn danh mục --</option>
+                                    <option
+                                            th:each="category : ${categories}"
+                                            th:value="${category.id}"
+                                            th:text="${category.name}"
+                                    ></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="modal-form-row">
+                            <div class="modal-form-group">
+                                <label><i class="fas fa-box"></i> Tên sản phẩm</label>
+                                <input type="text" th:field="*{name}" required />
+                            </div>
+                            <div class="modal-form-group">
+                                <label><i class="fas fa-palette"></i> Màu sắc</label>
+                                <input type="text" th:field="*{color}" required />
+                            </div>
+                        </div>
+
+                        <div class="modal-form-row">
+                            <div class="modal-form-group">
+                                <label><i class="fas fa-tag"></i> Giá(VND)</label>
+                                <input type="number" th:field="*{price}" required />
+                            </div>
+                            <div class="modal-form-group">
+                                <label><i class="fas fa-percent"></i> Giảm giá(%)abel>
+                                <input type="number" th:field="*{discount}" required />
+                            </div>
+                        </div>
+
+                        <div class="modal-form-row">
+                            <div class="modal-form-group">
+                                <label><i class="fas fa-cubes"></i> Số lượng</label>
+                                <input type="number" th:field="*{quantity}" required />
+                            </div>
+                            <div class="modal-form-group">
+                                <label><i class="fas fa-align-left"></i> Mô tả</label>
+                                <textarea th:field="*{description}" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-form-actions">
+                    <button type="button" class="modal-btn modal-btn-cancel" onclick="closeCreateModal()">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                    <button type="submit" class="modal-btn modal-btn-submit">
+                        <i class="fas fa-plus-circle"></i> Tạo sản phẩm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script th:src="@{/js/productManagement.js}"></script>
+</body>

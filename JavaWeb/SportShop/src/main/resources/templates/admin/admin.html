@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+    <style>
+      :root {
+        --primary-gradient: linear-gradient(45deg, #4b6cb7, #182848);
+        --secondary-gradient: linear-gradient(45deg, #3494e6, #ec6ead);
+        --success-gradient: linear-gradient(45deg, #11998e, #38ef7d);
+        --danger-gradient: linear-gradient(45deg, #cb2d3e, #ef473a);
+        --sidebar-gradient: linear-gradient(180deg, #2c3e50, #1a1a1a);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f7fa;
+        color: #333;
+      }
+
+      .container {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* Main content styles */
+      .main-content {
+        flex: 1;
+        margin-left: 250px;
+        padding: 30px;
+        background: #f8f9fe;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        animation: slideDown 0.5s ease;
+      }
+
+      .header h1 {
+        font-size: 28px;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 20px;
+        background: var(--primary-gradient);
+        border-radius: 50px;
+        color: white;
+        opacity: 0.9;
+      }
+
+      .user-info:hover {
+        opacity: 1;
+      }
+
+      .card-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        padding: 0 15px;
+        margin-bottom: 30px;
+      }
+
+      .card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        text-align: center;
+      }
+
+      .card:nth-child(1) {
+        background: linear-gradient(135deg, #4b6cb7, #182848);
+      }
+
+      .card:nth-child(2) {
+        background: linear-gradient(135deg, #11998e, #38ef7d);
+      }
+
+      .card:nth-child(3) {
+        background: linear-gradient(135deg, #f1c40f, #f39c12);
+      }
+
+      .card:nth-child(4) {
+        background: linear-gradient(135deg, #3494e6, #ec6ead);
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+      }
+
+      .card h5 {
+        font-size: 16px;
+        color: white;
+        margin-bottom: 15px;
+        font-weight: 500;
+      }
+
+      .card p {
+        font-size: 28px;
+        font-weight: bold;
+        color: white;
+        margin: 0;
+      }
+
+      .card .icon {
+        font-size: 40px;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 15px;
+      }
+
+      .alert {
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        border-radius: 15px;
+        position: relative;
+        animation: slideIn 0.5s ease-out;
+        background: rgba(255, 255, 255, 0.95);
+        border-left: 4px solid #4b6cb7;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .alert i {
+        color: #4b6cb7;
+        margin-right: 10px;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* Responsive styles */
+      @media (max-width: 768px) {
+        nav {
+          width: 70px;
+        }
+
+        nav a span {
+          display: none;
+        }
+
+        .main-content {
+          margin-left: 70px;
+        }
+
+        .card {
+          width: 100%;
+        }
+
+        .header {
+          flex-direction: column;
+          gap: 15px;
+        }
+      }
+      h5 {
+        color: #2c3e50;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f1f1f1;
+      }
+      
+      /* Table styling */
+      table {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        margin-top: 20px;
+        border-collapse: collapse;
+      }
+
+      thead {
+        background: var(--primary-gradient);
+        color: white;
+      }
+
+      th,
+      td {
+        padding: 15px;
+        text-align: left;
+      }
+
+      tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #eee;
+      }
+
+      tbody tr:hover {
+        background: rgba(75, 108, 183, 0.05);
+      }
+
+
+      /* Loading screen styles */
+      .loading-screen {
+        display: none;
+      }
+
+      @keyframes slideDown {
+        from {
+          transform: translateY(-20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* Responsive */
+      @media (max-width: 1200px) {
+        .card-container {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 576px) {
+        .card-container {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Action Buttons */
+      .action-btn {
+          padding: 8px 15px;
+          border-radius: 8px;
+          border: none;
+          color: white;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-size: 14px;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          text-decoration: none;
+          opacity: 0.9;
+          margin-right: 5px;
+        }
+
+        .view-btn {
+          background: var(--primary-gradient);
+        }
+
+        .btn-warning {
+          background: linear-gradient(45deg, #f1c40f, #e67e22);
+        }
+
+        .btn-danger {
+          background: var(--danger-gradient);
+        }
+
+        .action-btn:hover {
+          opacity: 1;
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-warning:hover {
+          box-shadow: 0 5px 15px rgba(241, 196, 15, 0.3);
+        }
+
+        .btn-danger:hover {
+          box-shadow: 0 5px 15px rgba(203, 45, 62, 0.3);
+        }
+
+        /* Thêm icons cho các nút */
+        .action-btn i {
+          font-size: 14px;
+        }
+
+        /* Responsive cho các nút */
+        @media (max-width: 768px) {
+          .action-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+          }
+        }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+        <!-- Sidebar -->
+        <nav>
+            <div class="logo">
+                <img th:src="@{/image/logo.jpg}" alt="Logo" />
+            </div>
+            <a href="/admin" class="nav-link">
+                <i class="fas fa-home"></i><span>Trang Quản Trị</span>
+            </a>
+            <a href="/admin/user" class="nav-link">
+                <i class="fas fa-users"></i><span>Quản Lý Người Dùng</span>
+            </a>
+
+            <!-- Product Management with Dropdown -->
+            <div class="product-menu">
+                <a href="#" class="nav-link" onclick="toggleProductMenu(event)">
+                    <div>
+                        <i class="fas fa-box"></i><span>Quản Lý Sản Phẩm</span>
+                    </div>
+                </a>
+                <div class="submenu" id="productSubmenu">
+                    <a href="/admin/product" class="nav-link">
+                        <i class="fas fa-cube"></i><span>Sản Phẩm</span>
+                    </a>
+                    <a href="/admin/category" class="nav-link">
+                        <i class="fas fa-tags"></i><span>Danh Mục</span>
+                    </a>
+                    <a href="/admin/brand" class="nav-link">
+                        <i class="fas fa-certificate"></i><span>Thương Hiệu</span>
+                    </a>
+                </div>
+            </div>
+
+            <a href="/admin/order" class="nav-link">
+                <i class="fas fa-shopping-cart"></i><span>Quản Lý Đơn Hàng</span>
+            </a>
+            <a href="#" class="nav-link"
+               onclick="document.getElementById('logoutForm').submit(); return false;">
+                <i class="fas fa-sign-out-alt"></i><span>Đăng xuất</span>
+            </a>
+            <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;">
+                <!-- Chỉ render CSRF nếu có, tránh lỗi khi tắt CSRF -->
+                <input th:if="${_csrf != null}"
+                       type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}" />
+            </form>
+        </nav>
+
+      <!-- Main content -->
+      <div class="main-content">
+        <div class="header">
+          <h1>Trang Quản Trị</h1>
+          <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span>Admin</span>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="card-container">
+          <div class="card">
+            <i class="fas fa-users icon"></i>
+            <h5>Số lượng người dùng</h5>
+            <p th:if="${userQuantity}" th:text="${userQuantity}">0</p>
+          </div>
+
+          <div class="card">
+            <i class="fas fa-box icon"></i>
+            <h5>Số lượng sản phẩm</h5>
+            <p th:if="${productQuantity}" th:text="${productQuantity}">0</p>
+          </div>
+
+          <div class="card">
+            <i class="fas fa-shopping-cart icon"></i>
+            <h5>Số lượng đơn hàng</h5>
+            <p th:if="${orderQuantity}" th:text="${orderQuantity}">0</p>
+          </div>
+          <div class="card">
+            <i class="fas fa-coins icon"></i>
+            <h5>Tổng Doanh Thu</h5>
+            <p th:if="${increase}" th:text="${increase + '$'}">0$</p>
+          </div>
+        </div>
+
+        <h5>Doanh Thu Theo Ngày 1 Tháng Trở Lại</h5>
+        <canvas id="revenueChart" width="100%" height="40"></canvas>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script th:inline="javascript">
+          /*<![CDATA[*/
+          const revenueData = /*[[${revenues}]]*/ [];
+
+          const labels = revenueData.map(item => item.date);
+          const data = revenueData.map(item => item.revenue);
+
+          const ctx = document.getElementById('revenueChart').getContext('2d');
+          const revenueChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Doanh Thu ($)',
+                data: data,
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+              }]
+            },
+            options: {
+              responsive: true,
+              scales: {
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Ngày'
+                  }
+                },
+                y: {
+                  title: {
+                    display: true,
+                    text: 'Doanh Thu ($)'
+                  },
+                  beginAtZero: true
+                }
+              }
+            }
+          });
+          /*]]>*/
+        </script>
+
+        <h5>Top 10 sản phẩm giảm giá nhiều nhất</h5>
+        <table>
+            <thead>
+            <tr>
+              <th>Mã sản phẩm</th>
+              <th>Tên sản phẩm</th>
+              <th>Số lượng trong kho</th>
+              <th>Ngày tạo</th>
+              <th>Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="product : ${productSales}">
+                <td th:text="${product.id}"></td>
+                <td th:text="${product.name}"></td>
+                <td th:text="${product.quantity}"></td>
+                <td th:text="${product.createDate}"></td>
+                <td>
+                    <a
+                            th:href="@{/admin/product/{id}(id=${product.id})}"
+                            class="action-btn view-btn"
+                    >
+                        <i class="fas fa-eye"></i> Xem
+                    </a>
+                    <a
+                            th:href="@{/admin/product/update/{id}(id=${product.id})}"
+                            class="action-btn btn-warning"
+                    >
+                        <i class="fas fa-edit"></i> Sửa
+                    </a>
+                    <button
+                            type="button"
+                            class="action-btn btn-danger"
+                            th:onclick="'deleteProduct(' + ${product.id} + ')'"
+                    >
+                        <i class="fas fa-trash"></i> Xóa
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+            
+        </table>
+
+      </div>
+    </div>
+
+    <script>
+      window.addEventListener("load", function () {
+        // Animation sẽ tự chạy thông qua CSS
+      });
+    </script>
+    <script th:src="@{/js/productManagement.js}"></script>
+  </body>
+</html>

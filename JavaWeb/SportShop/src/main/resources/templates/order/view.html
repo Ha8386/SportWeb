@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chi Tiết Đơn Hàng</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+
+        .order-header {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-section {
+            margin-bottom: 30px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #2c3e50;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .product-item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .product-image:hover {
+            transform: scale(1.1);
+            cursor: pointer;
+        }
+
+        .modal-content {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .modal-body {
+            padding: 0;
+        }
+
+        .modal-body img {
+            width: 100%;
+            height: auto;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .order-card {
+                box-shadow: none;
+                border: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="order-card">
+            <div class="order-header">
+                <h2 class="mb-0">Chi Tiết Đơn Hàng #<span th:text="${order.id}"></span></h2>
+            </div>
+
+            <div class="info-section">
+                <h5>Thông Tin Đơn Hàng</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fas fa-calendar-alt"></i> Ngày Mua
+                            </div>
+                            <div class="info-value" th:text="${order.date}"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fa-brands fa-codepen"></i> Số Lượng Sản Phẩm
+                            </div>
+                            <div class="info-value" th:text="${order.quantity}"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fa-solid fa-money-bill"></i> Tổng Tiền
+                            </div>
+                            <div class="info-value" th:text="${order.total + '$'}"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fas fa-info-circle"></i> Trạng Thái
+                            </div>
+                            <div class="info-value" th:text="${order.status}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h5>Thông Tin Người Nhận</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fas fa-user"></i> Tên Người Nhận
+                            </div>
+                            <div class="info-value" th:text="${order.user.username}"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fas fa-phone"></i> Số Điện Thoại
+                            </div>
+                            <div class="info-value" th:text="${order.phone}"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fas fa-map-marker-alt"></i> Địa Chỉ
+                            </div>
+                            <div class="info-value" th:text="${order.address}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h5>Chi Tiết Sản Phẩm</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Hình Ảnh</th>
+                                <th>Mã SP</th>
+                                <th>Tên Sản Phẩm</th>
+                                <th>Đơn Giá</th>
+                                <th>Giảm Giá</th>
+                                <th>Số Lượng</th>
+                                <th>Thành Tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${items}" class="product-item">
+                                <td>
+                                    <img th:if="${!item.product.images.empty}" 
+                                         th:src="${item.product.images[0].imageLink}"
+                                         class="product-image"
+                                         th:onclick="'showImageModal(this)'"
+                                         alt="Product Image" />
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-primary">
+                                        <i class="fas fa-barcode me-1"></i>
+                                        <span th:text="${item.product.id}"></span>
+                                    </span>
+                                </td>
+                                <td th:text="${item.product.name}"></td>
+                                <td>
+                                    <span th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}"></span>
+                                </td>
+                                <td>
+                                    <span class="text-danger">
+                                        <i class="fas fa-tag me-1"></i>
+                                        <span th:text="${item.discount + '%'}"></span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-boxes me-1"></i>
+                                    <span th:text="${item.quantity}"></span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-dollar-sign"></i>
+                                    <span th:text="${item.total}"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <img id="modalImage" src="" class="img-fluid" alt="Product Image" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showImageModal(imgElement) {
+            var modal = new bootstrap.Modal(document.getElementById('imageModal'));
+            document.getElementById('modalImage').src = imgElement.src;
+            modal.show();
+        }
+    </script>
+</body>
+</html> 

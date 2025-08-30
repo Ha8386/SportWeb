@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thông tin giỏ hàng</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f2f4f8;
+            padding: 40px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .cart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px 40px;
+            max-width: 1000px;
+            margin: auto;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            color: #007bff;
+        }
+
+        table.table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background-color: #f1f3f5;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .table td, .table th {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .table img {
+            max-width: 70px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .table tfoot td {
+            font-size: 18px;
+            font-weight: bold;
+            border-top: 2px solid #dee2e6;
+            text-align: right;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .table tfoot td:first-child {
+            text-align: right;
+        }
+
+        /* Responsive improvement */
+        @media (max-width: 768px) {
+            .cart-container {
+                padding: 20px;
+            }
+            .cart-title {
+                font-size: 22px;
+            }
+            .table img {
+                max-width: 50px;
+            }
+        }
+    </style>
+
+</head>
+<body>
+<div class="container cart-container">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="cart-title">Chi tiết giỏ hàng</div>
+    </div>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>#</th>
+            <th>Hình ảnh</th>
+            <th>Sản phẩm</th>
+            <th>Giá</th>
+            <th>Số lượng</th>
+            <th>Thành tiền</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item, iterStat : ${cartItems}">
+            <td th:text="${iterStat.count}"></td>
+            <td><img th:src="@{${item.imageLink}}" width="70px"></td>
+            <td th:text="${item.productName}"></td>
+            <td th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')}"></td>
+            <td th:text="${item.quantity}"></td>
+            <td th:text="${#numbers.formatDecimal(item.quantity * item.price, 0, 'COMMA', 0, 'POINT')}"></td>
+        </tr>
+
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="5" class="text-end fw-bold">Tổng tiền:</td>
+            <td class="fw-bold text-end">
+                <span th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span>
+            </td>
+        </tr>
+        </tfoot>
+
+    </table>
+
+</div>
+</body>
+</html>

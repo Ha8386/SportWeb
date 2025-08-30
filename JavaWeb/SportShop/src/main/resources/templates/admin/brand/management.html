@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Quản lý Thương Hiệu</title>
+  <link
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+          rel="stylesheet"
+  />
+  <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+  <link rel="stylesheet" th:href="@{/css/productManagement.css}" />
+  <style>
+    /* CSS cho Update Modal - Thêm vào file CSS của bạn */
+
+.current-image-label,
+.new-image-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  font-size: 11px;
+  text-align: center;
+  border-radius: 0 0 4px 4px;
+}
+
+.current-image-label {
+  background: rgba(0, 123, 255, 0.8);
+}
+
+.new-image-label {
+  background: rgba(40, 167, 69, 0.8);
+}
+
+.modal-preview-item.current-image {
+  border: 2px solid #007bff;
+}
+
+.modal-preview-item.new-image {
+  border: 2px solid #28a745;
+}
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- Sidebar -->
+  <nav>
+    <div class="logo">
+      <img th:src="@{/image/logo.jpg}" alt="Logo" />
+    </div>
+    <a href="/admin" class="nav-link">
+      <i class="fas fa-home"></i><span>Trang Quản Trị</span>
+    </a>
+    <a href="/admin/user" class="nav-link">
+      <i class="fas fa-users"></i><span>Quản Lý Người Dùng</span>
+    </a>
+
+    <!-- Product Management with Dropdown -->
+    <div class="product-menu">
+      <a href="#" class="nav-link" onclick="toggleProductMenu(event)">
+        <div>
+          <i class="fas fa-box"></i><span>Quản Lý Sản Phẩm</span>
+        </div>
+      </a>
+      <div class="submenu" id="productSubmenu">
+        <a href="/admin/product" class="nav-link">
+          <i class="fas fa-cube"></i><span>Sản Phẩm</span>
+        </a>
+        <a href="/admin/category" class="nav-link">
+          <i class="fas fa-tags"></i><span>Danh Mục</span>
+        </a>
+        <a href="/admin/brand" class="nav-link">
+          <i class="fas fa-certificate"></i><span>Thương Hiệu</span>
+        </a>
+      </div>
+    </div>
+
+    <a href="/admin/order" class="nav-link">
+      <i class="fas fa-shopping-cart"></i><span>Quản Lý Đơn Hàng</span>
+    </a>
+  </nav>
+
+  <div class="main-content">
+    <div class="header">
+      <h1>Quản Lý Thương Hiệu</h1>
+      <div class="header-actions">
+        <!-- Search Form -->
+        <form method="get" style="display: flex; align-items: center; margin: 0 10px;">
+          <div class="search-box">
+            <input type="text"
+                   name="name"
+                   placeholder="Tìm kiếm thương hiệu..."
+                   th:value="${param.name}"
+                   style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; width: 250px;">
+            <button type="submit" style="padding: 8px 12px; margin-left: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              <i class="fas fa-search"></i> Tìm
+            </button>
+          </div>
+          <!-- Giữ lại các tham số khác khi tìm kiếm -->
+          <input type="hidden" name="page" th:value="${param.page ?: 0}">
+          <input type="hidden" name="size" th:value="${param.size ?: 10}">
+          <input type="hidden" name="sortField" th:value="${param.sortField ?: 'id'}">
+          <input type="hidden" name="sortDir" th:value="${param.sortDir ?: 'asc'}">
+        </form>
+
+        <div class="product-view-selector">
+          <select id="brandViewSelect" onchange="toggleBrandView()">
+            <option value="active">Thương hiệu đang hoạt động</option>
+            <option value="deleted">Thương hiệu đã xóa gần đây</option>
+          </select>
+        </div>
+
+        <!-- Create Brand Button -->
+        <button class="btn create-btn" onclick="openCreateModal()">
+          <i class="fas fa-plus"></i>
+          Tạo Thương Hiệu Mới
+        </button>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div th:if="${notification}" class="alert" role="alert">
+      <i class="fas fa-check-circle"></i>
+      <span th:text="${notification}"></span>
+    </div>
+
+    <div th:if="${message}" class="alert" role="alert">
+      <i class="fas fa-check-circle"></i>
+      <span th:text="${message}"></span>
+    </div>
+
+    <!-- Active Brands Table -->
+    <div id="activeBrandsContainer" class="table-container">
+      <table>
+        <thead>
+        <tr>
+          <th>
+            <a href="#" class="sortable-link" onclick="sortTable('id')">
+              Mã thương hiệu
+              <span id="sort-icon-id"></span>
+            </a>
+          </th>
+          <th>
+            <a href="#" class="sortable-link" onclick="sortTable('name')">
+              Tên thương hiệu
+              <span id="sort-icon-name"></span>
+            </a>
+          </th>
+          <th>Ảnh</th>
+          <th>Thao tác</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="brand : ${brands}">
+          <td th:text="${brand.id}"></td>
+          <td th:text="${brand.name}"></td>
+          <td>
+            <img th:if="${brand.image != null}"
+                 th:src="${brand.image}"
+                 alt="Brand Image"
+                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+            <span th:if="${brand.image == null}" style="color: #666;">Không có ảnh</span>
+          </td>
+          <td>
+            <button type="button" class="action-btn btn btn-warning"
+                    th:data-id="${brand.id}"
+                    th:data-name="${brand.name}"
+                    th:data-image="${brand.image}"
+                    onclick="openUpdateModalFromData(this)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button
+                    type="button"
+                    class="action-btn btn-danger"
+                    th:onclick="'softDeleteBrand(' + ${brand.id} + ')'"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
+      <div class="pagination">
+        <ul>
+          <li th:if="${brandPage.hasPrevious()}">
+            <a th:href="@{/admin/brand(page=${brandPage.number - 1}, size=${param.size}, sortField=${param.sortField}, sortDir=${param.sortDir}, name=${param.name})}">« Trước</a>
+          </li>
+          <li th:each="i : ${#numbers.sequence(0, brandPage.totalPages - 1)}"
+              th:classappend="${i == brandPage.number} ? 'active'">
+            <a th:href="@{/admin/brand(page=${i}, size=${param.size}, sortField=${param.sortField}, sortDir=${param.sortDir}, name=${param.name})}" th:text="${i + 1}"></a>
+          </li>
+          <li th:if="${brandPage.hasNext()}">
+            <a th:href="@{/admin/brand(page=${brandPage.number + 1}, size=${param.size}, sortField=${param.sortField}, sortDir=${param.sortDir}, name=${param.name})}">Tiếp »</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Deleted Brands Table -->
+    <div id="deletedBrandsContainer" class="table-container hidden">
+      <table>
+        <thead>
+        <tr>
+          <th>
+            <a href="#" class="sortable-link" onclick="sortDeletedTable('id')">
+              Mã thương hiệu
+              <span id="sort-id"></span>
+            </a>
+          </th>
+          <th>
+            <a href="#" class="sortable-link" onclick="sortDeletedTable('name')">
+              Tên thương hiệu
+              <span id="sort-name"></span>
+            </a>
+          </th>
+          <th>Ảnh</th>
+          <th>Thao tác</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="brandDeleted : ${brandsDeleted}">
+          <td th:text="${brandDeleted.id}"></td>
+          <td th:text="${brandDeleted.name}"></td>
+          <td>
+            <img th:if="${brandDeleted.image != null}"
+                 th:src="${brandDeleted.image}"
+                 alt="Brand Image"
+                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+            <span th:if="${brandDeleted.image == null}" style="color: #666;">Không có ảnh</span>
+          </td>
+          <td>
+            <button
+                    type="button"
+                    class="action-btn restore-btn"
+                    th:onclick="'restoreBrand(' + ${brandDeleted.id} + ')'"
+            >
+              <i class="fas fa-undo"></i>
+            </button>
+
+            <button
+                    type="button"
+                    class="action-btn btn-danger"
+                    th:onclick="'deleteBrand(' + ${brandDeleted.id} + ')'"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
+      <div class="pagination">
+        <ul>
+          <li th:if="${brandDeletedPage.hasPrevious()}">
+            <a th:href="@{/admin/brand(page=${brandDeletedPage.number - 1}, size=${param.size}, sortField=${param.sortField}, sortDir=${param.sortDir}, name=${param.name})}">« Trước</a>
+          </li>
+          <li th:each="i : ${#numbers.sequence(0, brandDeletedPage.totalPages - 1)}"
+              th:classappend="${i == brandDeletedPage.number} ? 'active'">
+            <a th:href="@{/admin/brand(page=${i}, size=${param.size}, sortField=${param.sortField}, sortDir=${param.sortDir}, name=${param.name})}" th:text="${i + 1}"></a>
+          </li>
+          <li th:if="${brandDeletedPage.hasNext()}">
+            <a th:href="@{/admin/brand(page=${brandDeletedPage.number + 1}, size=${param.size}, sortField=${param.sortField}, sortDir=${param.sortDir}, name=${param.name})}">Tiếp »</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Create Brand Modal -->
+<div id="createBrandModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2><i class="fas fa-plus-circle"></i> Tạo Thương Hiệu Mới</h2>
+      <button class="modal-close" onclick="closeCreateModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form
+              th:action="@{/admin/brand/create}"
+              th:object="${newBrand}"
+              method="POST"
+              enctype="multipart/form-data"
+              id="createBrandForm"
+      >
+        <div class="modal-form-grid">
+          <!-- Image Upload Section -->
+          <div class="modal-image-upload">
+            <h3 class="modal-section-title">
+              <i class="fas fa-images"></i> Ảnh thương hiệu
+            </h3>
+            <div class="modal-image-preview-container">
+              <div id="modalImagePreviewGrid" class="modal-image-preview-grid">
+                <!-- Preview images sẽ được thêm vào đây bằng JavaScript -->
+              </div>
+              <div class="modal-upload-container">
+                <input
+                        type="file"
+                        id="modalFiles"
+                        name="file"
+                        accept="image/*"
+                        style="display: none"
+                        onchange="previewModalImages(event)"
+                        required
+                />
+                <button
+                        type="button"
+                        class="modal-upload-btn"
+                        onclick="document.getElementById('modalFiles').click()"
+                >
+                  <i class="fas fa-upload"></i> Tải ảnh lên
+                </button>
+                <p style="font-size: 12px; color: #666; margin-top: 5px;">Chọn một ảnh</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Brand Info Section -->
+          <div class="modal-form-section">
+            <h3 class="modal-section-title">
+              <i class="fas fa-info-circle"></i> Thông tin thương hiệu
+            </h3>
+
+            <div class="modal-form-row">
+              <div class="modal-form-group">
+                <label><i class="fas fa-certificate"></i> Tên thương hiệu</label>
+                <input type="text" th:field="*{name}" required />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-form-actions">
+          <button type="button" class="modal-btn modal-btn-cancel" onclick="closeCreateModal()">
+            <i class="fas fa-times"></i> Hủy
+          </button>
+          <button type="submit" class="modal-btn modal-btn-submit">
+            <i class="fas fa-plus-circle"></i> Tạo thương hiệu
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Update Brand Modal - Thêm vào cuối body trước tag </body> -->
+<div id="updateBrandModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2><i class="fas fa-edit"></i> Cập Nhật Thương Hiệu</h2>
+      <button class="modal-close" onclick="closeUpdateModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form
+              id="updateBrandForm"
+              method="POST"
+              enctype="multipart/form-data"
+      >
+        <div class="modal-form-grid">
+          <!-- Image Upload Section -->
+          <div class="modal-image-upload">
+            <h3 class="modal-section-title">
+              <i class="fas fa-images"></i> Ảnh thương hiệu
+            </h3>
+            <div class="modal-image-preview-container">
+              <div id="updateModalImagePreviewGrid" class="modal-image-preview-grid">
+                <!-- Preview images sẽ được thêm vào đây bằng JavaScript -->
+              </div>
+              <div class="modal-upload-container">
+                <input
+                        type="file"
+                        id="updateModalFiles"
+                        name="updateFile"
+                        accept="image/*"
+                        style="display: none"
+                        onchange="previewUpdateModalImages(event)"
+                />
+                <button
+                        type="button"
+                        class="modal-upload-btn"
+                        onclick="document.getElementById('updateModalFiles').click()"
+                >
+                  <i class="fas fa-upload"></i> Tải ảnh lên
+                </button>
+                <p style="font-size: 12px; color: #666; margin-top: 5px;">Chọn một ảnh mới (tùy chọn)</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Brand Info Section -->
+          <div class="modal-form-section">
+            <h3 class="modal-section-title">
+              <i class="fas fa-info-circle"></i> Thông tin thương hiệu
+            </h3>
+
+            <div class="modal-form-row">
+              <div class="modal-form-group">
+                <label><i class="fas fa-certificate"></i> Tên thương hiệu</label>
+                <input type="text" id="updateBrandName" name="name" required />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-form-actions">
+          <button type="button" class="modal-btn modal-btn-cancel" onclick="closeUpdateModal()">
+            <i class="fas fa-times"></i> Hủy
+          </button>
+          <button type="submit" class="modal-btn modal-btn-submit">
+            <i class="fas fa-save"></i> Cập nhật thương hiệu
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  // Toggle between active and deleted brands
+function toggleBrandView() {
+  const selector = document.getElementById('brandViewSelect');
+  const activeContainer = document.getElementById('activeBrandsContainer');
+  const deletedContainer = document.getElementById('deletedBrandsContainer');
+
+  if (selector.value === 'active') {
+      activeContainer.classList.remove('hidden');
+      deletedContainer.classList.add('hidden');
+  } else {
+      activeContainer.classList.add('hidden');
+      deletedContainer.classList.remove('hidden');
+  }
+}
+
+// Modal functions
+function openCreateModal() {
+  const modal = document.getElementById('createBrandModal');
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+  // Focus vào modal để dễ sử dụng
+  setTimeout(() => {
+      const firstInput = modal.querySelector('input[type="text"]');
+      if (firstInput) firstInput.focus();
+  }, 100);
+}
+
+function closeCreateModal() {
+  const modal = document.getElementById('createBrandModal');
+  modal.classList.remove('active');
+  setTimeout(() => {
+      modal.style.display = 'none';
+      document.getElementById('createBrandForm').reset();
+      document.getElementById('modalImagePreviewGrid').innerHTML = '';
+  }, 300); // Delay để animation chạy xong
+}
+
+// Image preview
+function previewModalImages(event) {
+  const file = event.target.files[0];
+  const previewGrid = document.getElementById('modalImagePreviewGrid');
+  previewGrid.innerHTML = '';
+
+  if (file) {
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+          const imageContainer = document.createElement('div');
+          imageContainer.className = 'modal-preview-item';
+
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.alt = 'Preview';
+
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'modal-remove-btn';
+          removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+          removeBtn.onclick = function() {
+              imageContainer.remove();
+              document.getElementById('modalFiles').value = '';
+          };
+
+          imageContainer.appendChild(img);
+          imageContainer.appendChild(removeBtn);
+          previewGrid.appendChild(imageContainer);
+      };
+
+      reader.readAsDataURL(file);
+  }
+}
+
+// Sorting functions
+function sortTable(field) {
+  const currentUrl = new URL(window.location);
+  const currentSortField = currentUrl.searchParams.get('sortField') || 'id';
+  const currentSortDir = currentUrl.searchParams.get('sortDir') || 'asc';
+
+  let newSortDir = 'asc';
+  if (currentSortField === field && currentSortDir === 'asc') {
+      newSortDir = 'desc';
+  }
+
+  currentUrl.searchParams.set('sortField', field);
+  currentUrl.searchParams.set('sortDir', newSortDir);
+  currentUrl.searchParams.set('page', '0');
+
+  window.location.href = currentUrl.toString();
+}
+
+function sortDeletedTable(field) {
+  sortTable(field);
+}
+
+// CRUD Operations với jQuery AJAX
+function softDeleteBrand(brandId) {
+  if (confirm('Bạn có chắc chắn muốn xóa thương hiệu này?')) {
+      $.ajax({
+          url: `/admin/brand/delete/${brandId}`,
+          type: 'PUT',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          success: function(response) {
+              location.reload();
+          },
+          error: function(xhr, status, error) {
+              alert('Có lỗi xảy ra khi xóa thương hiệu');
+          }
+      });
+  }
+}
+
+function restoreBrand(brandId) {
+  if (confirm('Bạn có chắc chắn muốn khôi phục thương hiệu này?')) {
+      $.ajax({
+          url: `/admin/brand/restore/${brandId}`,
+          type: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          success: function(response) {
+              location.reload();
+          },
+          error: function(xhr, status, error) {
+              alert('Có lỗi xảy ra khi khôi phục thương hiệu');
+          }
+      });
+  }
+}
+
+function deleteBrand(brandId) {
+  if (confirm('Bạn có chắc chắn muốn xóa vĩnh viễn thương hiệu này? Hành động này không thể hoàn tác!')) {
+      $.ajax({
+          url: `/admin/brand/delete/${brandId}`,
+          type: 'DELETE',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          success: function(response) {
+              location.reload();
+          },
+          error: function(xhr, status, error) {
+              alert('Có lỗi xảy ra khi xóa thương hiệu');
+          }
+      });
+  }
+}
+
+// Initialize sorting icons
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const sortField = urlParams.get('sortField') || 'id';
+  const sortDir = urlParams.get('sortDir') || 'asc';
+
+  const iconElement = document.getElementById(`sort-icon-${sortField}`);
+  if (iconElement) {
+      iconElement.innerHTML = sortDir === 'asc' ? '↑' : '↓';
+  }
+});
+
+window.onclick = function(event) {
+  const createModal = document.getElementById('createBrandModal');
+  const updateModal = document.getElementById('updateBrandModal');
+  if (event.target === createModal) closeCreateModal();
+  if (event.target === updateModal) closeUpdateModal();
+};
+
+
+  // Sidebar functions
+function toggleProductMenu(event) {
+  console.log('Menu clicked!'); // Thêm dòng này để test
+  event.preventDefault();
+  const productMenu = document.querySelector('.product-menu');
+  const submenu = document.getElementById('productSubmenu');
+
+  productMenu.classList.toggle('active');
+  submenu.classList.toggle('active');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+  const productMenu = document.querySelector('.product-menu');
+  const submenu = document.getElementById('productSubmenu');
+
+  if (!productMenu.contains(event.target)) {
+      productMenu.classList.remove('active');
+      submenu.classList.remove('active');
+  }
+});
+function openUpdateModalFromData(button) {
+    const id = button.getAttribute('data-id');
+    const name = button.getAttribute('data-name');
+    const image = button.getAttribute('data-image');
+    openUpdateModal(id, name, image);
+}
+
+  // Update Modal functions - Thêm vào phần script
+function openUpdateModal(brandId, brandName, brandImage) {
+  const modal = document.getElementById('updateBrandModal');
+  const form = document.getElementById('updateBrandForm');
+  const nameInput = document.getElementById('updateBrandName');
+  const previewGrid = document.getElementById('updateModalImagePreviewGrid');
+
+  // Set form action
+  form.action = `/admin/brand/update/${brandId}`;
+
+  // Set current brand name
+  nameInput.value = brandName;
+
+  // Clear previous preview
+  previewGrid.innerHTML = '';
+
+  // Show current image if exists
+  if (brandImage && brandImage !== 'null') {
+    const imageContainer = document.createElement('div');
+    imageContainer.className = 'modal-preview-item current-image';
+
+    const img = document.createElement('img');
+    img.src = brandImage;
+    img.alt = 'Current Image';
+
+    const label = document.createElement('div');
+    label.className = 'current-image-label';
+    label.innerHTML = '<i class="fas fa-image"></i> Ảnh hiện tại';
+
+    imageContainer.appendChild(img);
+    imageContainer.appendChild(label);
+    previewGrid.appendChild(imageContainer);
+  }
+
+  // Show modal
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+
+  // Focus vào modal
+  setTimeout(() => {
+    nameInput.focus();
+    nameInput.select();
+  }, 100);
+}
+
+function closeUpdateModal() {
+  const modal = document.getElementById('updateBrandModal');
+  modal.classList.remove('active');
+  setTimeout(() => {
+    modal.style.display = 'none';
+    document.getElementById('updateBrandForm').reset();
+    document.getElementById('updateModalImagePreviewGrid').innerHTML = '';
+    document.getElementById('updateModalFiles').value = '';
+  }, 300);
+}
+
+// Image preview for update modal
+function previewUpdateModalImages(event) {
+  const file = event.target.files[0];
+  const previewGrid = document.getElementById('updateModalImagePreviewGrid');
+
+  // Remove any previous new image preview, but keep current image
+  const newImagePreviews = previewGrid.querySelectorAll('.modal-preview-item:not(.current-image)');
+  newImagePreviews.forEach(item => item.remove());
+
+  if (file) {
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      const imageContainer = document.createElement('div');
+      imageContainer.className = 'modal-preview-item new-image';
+
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.alt = 'New Image Preview';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'modal-remove-btn';
+      removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+      removeBtn.onclick = function() {
+        imageContainer.remove();
+        document.getElementById('updateModalFiles').value = '';
+      };
+
+      const label = document.createElement('div');
+      label.className = 'new-image-label';
+      label.innerHTML = '<i class="fas fa-upload"></i> Ảnh mới';
+
+      imageContainer.appendChild(img);
+      imageContainer.appendChild(removeBtn);
+      imageContainer.appendChild(label);
+      previewGrid.appendChild(imageContainer);
+    };
+
+    reader.readAsDataURL(file);
+  }
+}
+
+// Close update modal when clicking outside
+window.onclick = function(event) {
+  const createModal = document.getElementById('createBrandModal');
+  const updateModal = document.getElementById('updateBrandModal');
+
+  if (event.target === createModal) {
+    closeCreateModal();
+  }
+  if (event.target === updateModal) {
+    closeUpdateModal();
+  }
+}
+</script>
+</body>
+</html>

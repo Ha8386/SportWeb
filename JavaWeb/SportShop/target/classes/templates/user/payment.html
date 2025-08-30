@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Sport Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .payment-method { border:1px solid #ddd; padding:15px; margin:10px 0; border-radius:5px; cursor:pointer; }
+        .payment-method:hover { background-color:#f8f9fa; }
+        .payment-method.selected { border-color:#0d6efd; background-color:#e7f1ff; }
+    </style>
+</head>
+<body>
+<div class="container my-5">
+    <h2 class="mb-4">Payment Method</h2>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form id="paymentForm" th:action="@{/payment/process}" method="post">
+                        <!-- CSRF (nếu bật) -->
+                        <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                        <!-- LUÔN gửi orderId (đã đảm bảo có ở controller GET) -->
+                        <input type="hidden" name="orderId" th:value="${order.id}">
+
+                        <!-- addressId -->
+                        <input type="hidden" name="addressId" th:value="${addressId}">
+
+                        <!-- gửi subtotal thô -->
+                        <input type="hidden" name="subtotal" th:value="${subtotal}"/>
+
+                        <div class="payment-method" onclick="selectPayment('COD')">
+                            <div class="d-flex align-items-center">
+                                <input type="radio" name="paymentMethod" value="COD" id="codPayment" class="me-3" checked>
+                                <label for="codPayment" class="mb-0">
+                                    <strong>Cash on Delivery (COD)</strong>
+                                    <p class="text-muted mb-0">Pay when you receive the package</p>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="payment-method mt-3" onclick="selectPayment('VNPAY')">
+                            <div class="d-flex align-items-center">
+                                <input type="radio" name="paymentMethod" value="VNPAY" id="vnpayPayment" class="me-3">
+                                <label for="vnpayPayment" class="mb-0">
+                                    <strong>VNPay</strong>
+                                    <p class="text-muted mb-0">Pay online with VNPay</p>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mt-4">Proceed to Payment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header"><h4 class="mb-0">Order Summary</h4></div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span th:text="${#numbers.formatDecimal(subtotal ?: 0, 0, 'COMMA', 0, 'POINT') + ' VND'}">0 VND</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping:</span><span>Free</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <strong>Total:</strong>
+                        <!-- Total = Subtotal vì Free ship -->
+                        <strong th:text="${#numbers.formatDecimal(subtotal ?: 0, 0, 'COMMA', 0, 'POINT') + ' VND'}">0 VND</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /row -->
+</div><!-- /container -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function selectPayment(method) {
+      document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
+      const selectedMethod = document.querySelector(`input[value="${method}"]`);
+      selectedMethod.checked = true;
+      selectedMethod.closest('.payment-method').classList.add('selected');
+    }
+    window.onload = function(){ selectPayment('COD'); };
+</script>
+</body>
+</html>

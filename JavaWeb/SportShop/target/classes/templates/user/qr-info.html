@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thông Tin Người Dùng</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 40px 0;
+        }
+        .profile-card {
+            max-width: 500px;
+            margin: auto;
+            padding: 30px;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #3498db;
+            margin-bottom: 15px;
+        }
+        .profile-info p {
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .profile-info strong {
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="profile-card">
+        <h3 class="mb-4">Thông Tin Người Dùng</h3>
+        <img
+                th:src="@{${user.avatar}}"
+                onerror="this.src='https://via.placeholder.com/150'"
+                alt="Avatar"
+                class="profile-avatar"
+        />
+        <div class="profile-info mt-3">
+            <p><strong>Họ tên:</strong> <span th:text="${user.fullName}"></span></p>
+            <p><strong>Email:</strong> <span th:text="${user.email}"></span></p>
+            <p><strong>Số điện thoại:</strong> <span th:text="${user.phone}"></span></p>
+            <p><strong>Giới tính:</strong> <span th:text="${user.gender}"></span></p>
+        </div>
+    </div>
+</div>
+</body>
+</html>
