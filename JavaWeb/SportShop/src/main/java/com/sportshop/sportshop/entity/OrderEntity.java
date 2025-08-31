@@ -44,7 +44,12 @@ public class OrderEntity {
     @JoinColumn(name = "user_id")
     UserEntity user;
 
-    @OneToMany(mappedBy = "order",fetch = FetchType.LAZY)
+    @OneToMany(
+            mappedBy = "order",              // phải đúng tên field ở OrderDetailEntity
+            fetch = FetchType.LAZY,          // để nguyên LAZY
+            cascade = CascadeType.ALL,       // lưu/ cập nhật chi tiết cùng đơn
+            orphanRemoval = true             // xoá chi tiết khi gỡ khỏi list
+    )
     List<OrderDetailEntity> items;
 }
 

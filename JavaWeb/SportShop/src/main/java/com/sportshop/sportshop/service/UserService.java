@@ -50,4 +50,5 @@ public interface UserService {
 
     public UserEntity findByUserName(String username);
 
+    Long findIdByUsername(String username);
 }

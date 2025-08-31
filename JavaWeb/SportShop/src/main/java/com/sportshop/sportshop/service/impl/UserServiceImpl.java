@@ -264,7 +264,17 @@ public class UserServiceImpl implements UserService {
         return "Sản phẩm đang được chuẩn bị để giao, Xem chi tiết tại lịch sử mua hàng";
     }
     @Override
-    public UserEntity  findByUserName(String username) {
-        return userRepository.findByUsername(username);
+    public UserEntity findByUserName(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+        // hoặc: new UsernameNotFoundException(...)
     }
+
+    @Override
+    public Long findIdByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(UserEntity::getId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+    }
+
 }

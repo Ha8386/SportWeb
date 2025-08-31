@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Quản Lý Doanh Thu</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}" />
+    <link rel="stylesheet" th:href="@{/css/productManagement.css}" />
+
+    <style>
+        :root{ --panel:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8; --brand:#3b82f6; --grid:#334155; }
+        .header{background:#fff;border-radius:14px;padding:18px 24px;margin:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+        .header h1{margin:0;color:#0f172a;letter-spacing:.3px}
+        .filter-bar{display:flex;gap:12px;align-items:center;margin:16px 12px}
+        .btn-primary{padding:8px 14px;border-radius:10px;border:none;cursor:pointer;background:var(--brand);color:#fff}
+        .card-container{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:16px;margin:12px}
+        .card{background:var(--card);color:var(--text);border-radius:14px;padding:16px;box-shadow:0 10px 24px rgba(2,6,23,.35)}
+        .card .icon{font-size:22px;color:var(--muted)}
+        .card h5{margin:8px 0 4px}
+        .charts{display:grid;grid-template-columns:2fr 1fr;gap:24px;margin:18px 12px}
+        .panel{background:var(--panel);padding:16px;border-radius:14px;color:var(--text);box-shadow:0 10px 24px rgba(2,6,23,.45)}
+        .panel h3{margin:0 0 12px}
+        canvas{width:100% !important;height:300px !important;display:block;border-radius:10px}
+        .nav-link.active{background: rgba(255,255,255,0.12);}
+        .empty-hint{display:flex;align-items:center;justify-content:center;height:300px;border:1px dashed var(--grid);
+          border-radius:10px;color:#94a3b8;font-weight:600;letter-spacing:.2px}
+        /* KPI màu như bạn muốn */
+        .card-container .card:nth-child(1){background:linear-gradient(135deg,#1e3a8a 0%, #0b225a 100%)}
+        .card-container .card:nth-child(2){background:linear-gradient(135deg,#10b981 0%, #22c55e 100%)}
+        .card-container .card:nth-child(3){background:linear-gradient(135deg,#f59e0b 0%, #d97706 100%)}
+        .card-container .card:nth-child(4){background:linear-gradient(135deg,#8b5cf6 0%, #ec4899 100%)}
+        .card::after{content:"";display:block;height:2px;width:100%;background:rgba(255,255,255,.85);margin:6px 0 10px;border-radius:1px}
+        .card p{margin:0;font-size:28px;font-weight:800;letter-spacing:.3px}
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Sidebar -->
+    <nav>
+        <div class="logo">
+            <img th:src="@{/image/logo.jpg}" alt="Logo" />
+        </div>
+        <a href="/admin" class="nav-link">
+            <i class="fas fa-home"></i><span>Trang Quản Trị</span>
+        </a>
+        <a href="/admin/user" class="nav-link">
+            <i class="fas fa-users"></i><span>Quản Lý Người Dùng</span>
+        </a>
+
+        <div class="product-menu">
+            <a href="#" class="nav-link" onclick="toggleProductMenu(event)">
+                <div><i class="fas fa-box"></i><span>Quản Lý Sản Phẩm</span></div>
+            </a>
+            <div class="submenu" id="productSubmenu">
+                <a href="/admin/product"  class="nav-link"><i class="fas fa-cube"></i><span>Sản Phẩm</span></a>
+                <a href="/admin/category" class="nav-link"><i class="fas fa-tags"></i><span>Danh Mục</span></a>
+                <a href="/admin/brand"    class="nav-link"><i class="fas fa-certificate"></i><span>Thương Hiệu</span></a>
+            </div>
+        </div>
+
+        <a href="/admin/order" class="nav-link">
+            <i class="fas fa-shopping-cart"></i><span>Quản Lý Đơn Hàng</span>
+        </a>
+
+        <a href="/admin/revenue" class="nav-link active">
+            <i class="fas fa-chart-line"></i><span>Quản Lý Doanh Thu</span>
+        </a>
+
+        <a href="#" class="nav-link" onclick="document.getElementById('logoutForm').submit(); return false;">
+            <i class="fas fa-sign-out-alt"></i><span>Đăng xuất</span>
+        </a>
+        <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;">
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        </form>
+    </nav>
+
+    <!-- Main content -->
+    <div class="main-content">
+        <div class="header">
+            <h1>Quản Lý Doanh Thu</h1>
+            <div class="user-info"><i class="fas fa-user-circle"></i><span>Admin</span></div>
+        </div>
+
+        <!-- Bộ lọc ngày -->
+        <form class="filter-bar" method="get" th:action="@{/admin/revenue}">
+            <div>Từ ngày: <input type="date" name="from" th:value="${from}"></div>
+            <div>Đến ngày: <input type="date" name="to" th:value="${to}"></div>
+            <button class="btn-primary" type="submit"><i class="fas fa-filter"></i> Lọc</button>
+        </form>
+
+        <!-- KPI -->
+        <div class="card-container">
+            <div class="card">
+                <i class="fas fa-users icon"></i>
+                <h5>Số lượng người dùng</h5>
+                <p th:text="${userQuantity} ?: 0">0</p>
+            </div>
+            <div class="card">
+                <i class="fas fa-box icon"></i>
+                <h5>Số lượng sản phẩm</h5>
+                <p th:text="${productQuantity} ?: 0">0</p>
+            </div>
+            <div class="card">
+                <i class="fas fa-shopping-cart icon"></i>
+                <h5>Số lượng đơn hàng</h5>
+                <p th:text="${orderQuantity} ?: 0">0</p>
+            </div>
+            <div class="card">
+                <i class="fas fa-coins icon"></i>
+                <h5>Tổng Doanh Thu</h5>
+                <p th:text="${#numbers.formatDecimal(increase, 0, 'POINT', 2, 'POINT')} + ' $'">0$</p>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts">
+            <div class="panel">
+                <h3>Doanh thu theo ngày</h3>
+                <canvas id="revenueDayChart"></canvas>
+            </div>
+
+            <div class="panel">
+                <h3>Doanh thu theo tháng</h3>
+                <canvas id="revenueMonthChart"></canvas>
+            </div>
+            <div class="panel">
+                <h3>Doanh thu theo năm</h3>
+                <canvas id="revenueYearChart"></canvas>
+            </div>
+            <div class="panel" style="grid-column: 1 / -1;">
+                <h3>Doanh thu theo danh mục</h3>
+                <canvas id="revenueCategoryPie"></canvas>
+            </div>
+        </div>
+    </div> <!-- /.main-content -->
+</div> <!-- /.container -->
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script th:inline="javascript">
+    // ===== Theme & helpers =====
+    Chart.defaults.color = '#e5e7eb';
+    Chart.defaults.borderColor = '#334155';
+
+    const money = v => (v ?? 0).toLocaleString('vi-VN', { style:'currency', currency:'VND', maximumFractionDigits:0 });
+    const showEmpty = (el, msg) => { el.innerHTML += `<div class="empty-hint">${msg}</div>`; };
+
+    const mkBarOptions = (horizontal = false) => ({
+      responsive: true, maintainAspectRatio: false, indexAxis: horizontal ? 'y' : 'x',
+      layout: { padding: 8 },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${money(ctx.parsed[horizontal ? 'x' : 'y'])}` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { autoSkip: true, maxRotation: 0, minRotation: 0 } },
+        y: { beginAtZero: true, grid: { drawBorder: false }, ticks: { callback: v => money(v) } }
+      }
+    });
+    const mkBarDataset = (data, color) => ({
+      data, backgroundColor: color, borderRadius: 8, borderSkipped: false,
+      categoryPercentage: 0.45, barPercentage: 0.75, maxBarThickness: 16
+    });
+    const doughnutOptions = {
+      responsive: true, maintainAspectRatio: false, cutout: '55%',
+      plugins: {
+        legend: { position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle' } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${money(ctx.parsed)}` } }
+      }
+    };
+
+    // ===== Fetch & draw all charts =====
+    (async () => {
+      const fromVal = document.querySelector('input[name="from"]')?.value || '';
+      const toVal   = document.querySelector('input[name="to"]')?.value   || '';
+      const q = `?from=${encodeURIComponent(fromVal)}&to=${encodeURIComponent(toVal)}`;
+
+      // Build URL (Thymeleaf sẽ render nếu có; nếu rỗng dùng fallback với +q)
+      const urlDay   = /*[[@{/admin/revenue/chart/day   (from=${from}, to=${to})}]]*/ '' || '/admin/revenue/chart/day'   + q;
+      const urlMonth = /*[[@{/admin/revenue/chart/month (from=${from}, to=${to})}]]*/ '' || '/admin/revenue/chart/month' + q;
+      const urlYear  = /*[[@{/admin/revenue/chart/year  (from=${from}, to=${to})}]]*/ '' || '/admin/revenue/chart/year'  + q;
+      const urlProd  = /*[[@{/admin/revenue/chart/product(from=${from}, to=${to})}]]*/ '' || '/admin/revenue/chart/product' + q;
+      const urlCat   = /*[[@{/admin/revenue/chart/category(from=${from}, to=${to})}]]*/ '' || '/admin/revenue/chart/category' + q;
+
+      const fetchJSON = async (u) => {
+        const r = await fetch(u, { headers: { 'Accept': 'application/json' } });
+        if (!r.ok) throw new Error(`HTTP ${r.status} - ${u}`); return r.json();
+      };
+
+      let day=[], month=[], year=[], prod=[], cat=[];
+      try {
+        [day, month, year, prod, cat] = await Promise.all([
+          fetchJSON(urlDay), fetchJSON(urlMonth), fetchJSON(urlYear), fetchJSON(urlProd), fetchJSON(urlCat)
+        ]);
+        console.debug('category data:', cat); // <-- xem nhanh trong DevTools
+      } catch (e) {
+        console.error(e);
+      }
+
+      // === Ngày (line)
+      const dayCv = document.getElementById('revenueDayChart');
+      if (day?.length) {
+        new Chart(dayCv.getContext('2d'), {
+          type: 'line',
+          data: { labels: day.map(x=>x.date), datasets: [{ label:'Doanh thu', data: day.map(x=>x.revenue), borderColor:'rgba(59,130,246,1)', borderWidth:2, pointRadius:2, tension:.35, fill:false }]},
+          options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true } } }
+        });
+      } else showEmpty(dayCv.parentElement, 'Không có dữ liệu theo ngày');
+
+      // === Tháng (bar)
+      const monthCv = document.getElementById('revenueMonthChart');
+      if (month?.length) {
+        new Chart(monthCv.getContext('2d'), {
+          type: 'bar',
+          data: { labels: month.map(x=>x.month), datasets: [ mkBarDataset(month.map(x=>x.revenue),'rgba(16,185,129,1)') ]},
+          options: mkBarOptions(false)
+        });
+      } else showEmpty(monthCv.parentElement, 'Không có dữ liệu theo tháng');
+
+      // === Năm (bar)
+      const yearCv = document.getElementById('revenueYearChart');
+      if (year?.length) {
+        new Chart(yearCv.getContext('2d'), {
+          type: 'bar',
+          data: { labels: year.map(x=>x.year), datasets: [ mkBarDataset(year.map(x=>x.revenue),'rgba(245,158,11,1)') ]},
+          options: mkBarOptions(false)
+        });
+      } else showEmpty(yearCv.parentElement, 'Không có dữ liệu theo năm');
+
+      // === Sản phẩm (bar ngang)
+      const prodCv = document.getElementById('revenueProductChart');
+      if (prod?.length) {
+        new Chart(prodCv.getContext('2d'), {
+          type: 'bar',
+          data: { labels: prod.map(x=>x.name), datasets: [ mkBarDataset(prod.map(x=>x.revenue),'rgba(99,102,241,1)') ]},
+          options: mkBarOptions(true)
+        });
+      } else showEmpty(prodCv.parentElement, 'Không có dữ liệu theo sản phẩm');
+
+      // === Danh mục (doughnut)
+      const catCv = document.getElementById('revenueCategoryPie');
+      const allZero = (arr) => Array.isArray(arr) && arr.every(x => (Number(x?.revenue) || 0) === 0);
+      if (cat?.length && !allZero(cat)) {
+        const labels = cat.map(x=>x.category);
+        const values = cat.map(x=>x.revenue);
+        const colors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#84cc16','#f43f5e','#a855f7','#14b8a6'];
+        new Chart(catCv.getContext('2d'), {
+          type: 'doughnut',
+          data: { labels, datasets: [{ data: values, backgroundColor: labels.map((_,i)=>colors[i%colors.length]) }]},
+          options: doughnutOptions
+        });
+      } else {
+        showEmpty(catCv.parentElement, 'Không có dữ liệu theo danh mục');
+      }
+    })();
+</script>
+
+</body>
+</html>

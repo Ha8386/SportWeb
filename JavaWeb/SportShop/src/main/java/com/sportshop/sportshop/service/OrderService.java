@@ -23,10 +23,12 @@ public interface OrderService {
     // Get Order By orderId;
     OrderResponse getOrderById(Long orderId);
 
-    // AddOrder
+    // AddOrder:
+    // TẠO ORDER TỪ GIỎ của user (đổ OrderDetail từ Cart, tính total, và set quantity = TỔNG SỐ LƯỢNG)
     Long AddOrder(UserEntity user);
 
-    // Update ToTal Price
+    // Update ToTal Price:
+    // Tính lại total và quantity = TỔNG SỐ LƯỢNG từ OrderDetail
     void UpdateToTalPrice(Long orderId);
 
     // Get Order By UserId

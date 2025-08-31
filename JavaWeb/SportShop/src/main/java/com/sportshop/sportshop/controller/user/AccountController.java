@@ -118,11 +118,11 @@ public class AccountController {
         return "redirect:/payment?orderId=" + orderId + "&addressId=" + addressId;
     }
 
-    @GetMapping("/history")
-    public ModelAndView historyBuyProduct(){
-        UserEntity user = getUserAuthentication.getUser();
-        
-        return new ModelAndView("/user/history")
-                .addObject("orders", orderService.historyBuy(user.getId()));
-    }
+//    @GetMapping("/history")
+//    public ModelAndView historyBuyProduct(){
+//        UserEntity user = getUserAuthentication.getUser();
+//
+//        return new ModelAndView("/user/history")
+//                .addObject("orders", orderService.historyBuy(user.getId()));
+//    }
 }

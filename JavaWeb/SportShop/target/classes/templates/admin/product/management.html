@@ -14,41 +14,56 @@
 <body>
     <div class="container">
     <!-- Sidebar -->
-    <nav>
-        <div class="logo">
-            <img th:src="@{/image/logo.jpg}" alt="Logo" />
-        </div>
-        <a href="/admin" class="nav-link">
-            <i class="fas fa-home"></i><span>Trang Quản Trị</span>
-        </a>
-        <a href="/admin/user" class="nav-link">
-            <i class="fas fa-users"></i><span>Quản Lý Người Dùng</span>
-        </a>
-
-        <!-- Product Management with Dropdown -->
-        <div class="product-menu">
-            <a href="#" class="nav-link" onclick="toggleProductMenu(event)">
-                <div>
-                    <i class="fas fa-box"></i><span>Quản Lý Sản Phẩm</span>
-                </div>
-            </a>
-            <div class="submenu" id="productSubmenu">
-                <a href="/admin/product" class="nav-link">
-                    <i class="fas fa-cube"></i><span>Sản Phẩm</span>
-                </a>
-                <a href="/admin/category" class="nav-link">
-                    <i class="fas fa-tags"></i><span>Danh Mục</span>
-                </a>
-                <a href="/admin/brand" class="nav-link">
-                    <i class="fas fa-certificate"></i><span>Thương Hiệu</span>
-                </a>
+        <nav>
+            <div class="logo">
+                <img th:src="@{/image/logo.jpg}" alt="Logo" />
             </div>
-        </div>
+            <a href="/admin" class="nav-link">
+                <i class="fas fa-home"></i><span>Trang Quản Trị</span>
+            </a>
+            <a href="/admin/user" class="nav-link">
+                <i class="fas fa-users"></i><span>Quản Lý Người Dùng</span>
+            </a>
 
-        <a href="/admin/order" class="nav-link">
-            <i class="fas fa-shopping-cart"></i><span>Quản Lý Đơn Hàng</span>
-        </a>
-    </nav>
+            <!-- Product Management with Dropdown -->
+            <div class="product-menu">
+                <a href="#" class="nav-link" onclick="toggleProductMenu(event)">
+                    <div>
+                        <i class="fas fa-box"></i><span>Quản Lý Sản Phẩm</span>
+                    </div>
+                </a>
+                <div class="submenu" id="productSubmenu">
+                    <a href="/admin/product" class="nav-link">
+                        <i class="fas fa-cube"></i><span>Sản Phẩm</span>
+                    </a>
+                    <a href="/admin/category" class="nav-link">
+                        <i class="fas fa-tags"></i><span>Danh Mục</span>
+                    </a>
+                    <a href="/admin/brand" class="nav-link">
+                        <i class="fas fa-certificate"></i><span>Thương Hiệu</span>
+                    </a>
+                </div>
+            </div>
+
+            <a href="/admin/order" class="nav-link">
+                <i class="fas fa-shopping-cart"></i><span>Quản Lý Đơn Hàng</span>
+            </a>
+            <a href="/admin/revenue" class="nav-link">
+                <i class="fas fa-chart-line"></i><span>Quản Lý Doanh Thu</span>
+            </a>
+
+            <a href="#" class="nav-link"
+               onclick="document.getElementById('logoutForm').submit(); return false;">
+                <i class="fas fa-sign-out-alt"></i><span>Đăng xuất</span>
+            </a>
+            <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;">
+                <!-- Chỉ render CSRF nếu có, tránh lỗi khi tắt CSRF -->
+                <input th:if="${_csrf != null}"
+                       type="hidden"
+                       th:name="${_csrf.parameterName}"
+                       th:value="${_csrf.token}" />
+            </form>
+        </nav>
 
     <div class="main-content">
         <div class="header">

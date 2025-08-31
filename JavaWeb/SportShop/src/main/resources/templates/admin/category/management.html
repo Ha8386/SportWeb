@@ -74,7 +74,7 @@
             <i class="fas fa-tags"></i><span>Danh Mục</span>
           </a>
           <a href="/admin/brand" class="nav-link">
-            <i class="fas fa-certificate"></i><span>Danh mục</span>
+            <i class="fas fa-certificate"></i><span>Thương Hiệu</span>
           </a>
         </div>
       </div>
@@ -82,6 +82,21 @@
       <a href="/admin/order" class="nav-link">
         <i class="fas fa-shopping-cart"></i><span>Quản Lý Đơn Hàng</span>
       </a>
+      <a href="/admin/revenue" class="nav-link">
+        <i class="fas fa-chart-line"></i><span>Quản Lý Doanh Thu</span>
+      </a>
+
+      <a href="#" class="nav-link"
+         onclick="document.getElementById('logoutForm').submit(); return false;">
+        <i class="fas fa-sign-out-alt"></i><span>Đăng xuất</span>
+      </a>
+      <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;">
+        <!-- Chỉ render CSRF nếu có, tránh lỗi khi tắt CSRF -->
+        <input th:if="${_csrf != null}"
+               type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}" />
+      </form>
     </nav>
 
     <div class="main-content">

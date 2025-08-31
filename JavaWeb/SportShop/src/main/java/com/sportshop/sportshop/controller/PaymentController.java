@@ -48,7 +48,10 @@ public class PaymentController {
     @Autowired private GetUserAuthentication getUserAuthentication;
 
     /**
-     * Trang payment: nếu chưa có orderId -> tạo mới rồi redirect lại kèm orderId.
+     * Trang payment:
+     * - Nếu chưa có orderId -> AddOrder(user) sẽ TỰ động lấy giỏ của user, tạo Order + OrderDetails,
+     *   set tổng tiền & tổng số lượng (quantity = SUM(cart.quantity)), rồi redirect lại kèm orderId.
+     * - Nếu đã có orderId -> hiển thị payment, subtotal dùng từ server (order.total) nếu có.
      */
     @GetMapping
     public String showPaymentPage(@RequestParam(value = "orderId", required = false) Long orderId,
@@ -59,11 +62,10 @@ public class PaymentController {
 
         Long addressId = (addressIdParam != null) ? addressIdParam : addressidParam;
 
-        // Nếu thiếu orderId: tạo đơn trống cho user hiện tại
+        // Nếu thiếu orderId: tạo đơn từ GIỎ của user hiện tại (bao gồm OrderDetails + tổng số lượng + tổng tiền)
         if (orderId == null) {
             UserEntity user = getUserAuthentication.getUser();
-            Long newOrderId = orderService.AddOrder(user);  // tạo record order (status mặc định)
-            // Không bắt buộc set total tại đây; sẽ set khi process COD/VNPAY hoặc khi đã có subtotal
+            Long newOrderId = orderService.AddOrder(user);
             String url = UriComponentsBuilder.fromPath("/payment")
                     .queryParam("orderId", newOrderId)
                     .queryParam("addressId", addressId)
@@ -123,15 +125,9 @@ public class PaymentController {
                     orderId, paymentMethod, orderDto.getTotal(), subtotalParam, amount);
 
             if ("COD".equalsIgnoreCase(paymentMethod)) {
-                // Lưu total nếu còn thiếu (có thể = 0 nếu giỏ rỗng, nhưng bình thường sẽ >0)
                 persistTotalIfMissing(orderId, amount);
-
-                // Đổi trạng thái
                 orderService.updateStatusOrder(orderId, StatusOrderEnum.Dang_Xu_Ly);
-
-                // Xóa giỏ của chủ sở hữu order
                 clearCartOfOrderOwner(orderId);
-
                 return "redirect:/user/history";
             }
 
@@ -140,7 +136,6 @@ public class PaymentController {
                     model.addAttribute("error", "Invalid order amount");
                     return "error";
                 }
-                // Lưu total trước khi qua VNPay (đảm bảo đồng nhất)
                 persistTotalIfMissing(orderId, amount);
 
                 long amountVnd = BigDecimal.valueOf(amount)
@@ -194,16 +189,10 @@ public class PaymentController {
                         if (vnpAmount != null) amount = Long.parseLong(vnpAmount) / 100; // VNPay x100
                     } catch (NumberFormatException ignore) {}
 
-                    // Lưu total nếu còn thiếu
                     persistTotalIfMissing(orderId, amount);
-
-                    // Đổi trạng thái
                     orderService.updateStatusOrder(orderId, StatusOrderEnum.Dang_Xu_Ly);
-
-                    // Xóa giỏ
                     clearCartOfOrderOwner(orderId);
 
-                    // Cho service xử lý thêm nếu cần (ghi log giao dịch…)
                     try { paymentService.processPaymentCallback(request); } catch (Exception ex) {
                         log.warn("[VNPAY][CALLBACK] processPaymentCallback warn: {}", ex.getMessage());
                     }

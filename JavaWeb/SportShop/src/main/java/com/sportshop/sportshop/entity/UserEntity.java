@@ -64,4 +64,6 @@ public class UserEntity {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     List<AddressEntity> addresses;
+
+
 }
