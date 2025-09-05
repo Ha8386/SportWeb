@@ -39,4 +39,5 @@ public interface OrderService {
 
     List<DailyRevenue> getRevenueByDay(LocalDate startDate, LocalDate endDate);
 
+    void confirmPaidAndAdjustStock(Long orderId);
 }

@@ -217,10 +217,43 @@
         padding-left: 30px;
       }
 
-      .submenu {
-        background: rgba(0, 0, 0, 0.15);
-        display: none;
-      }
+.submenu {
+display: none;
+}
+      ./* Ẩn submenu mặc định */
+.product-menu .submenu{
+   display: none !important;
+  max-height: 0 !important;
+  overflow: hidden;
+  transition: max-height .25s ease;
+  will-change: max-height;
+  background: rgba(0,0,0,0.18);
+  padding: 0; /* đóng thì không padding */
+}
+
+/* Khi JS thêm .active -> xổ xuống + cho cuộn khi dài */
+.product-menu.active .submenu,
+#productSubmenu.active{
+  display: block !important;
+  max-height: 260px !important;
+  overflow-y: auto !important;
+  transition: all 0.3s ease;
+
+  padding: 6px 0;
+}
+
+/* Item con thụt vào như ảnh 1 */
+.product-menu .submenu .nav-link{
+  padding: 12px 25px 12px 55px;
+  font-size: .95em;
+}
+.product-menu .submenu .nav-link:hover{
+  background: rgba(255,255,255,.10);
+  color: #fff;
+}
+
+/* Sidebar tự cuộn nếu cao hơn màn hình */
+nav{ overflow-y: auto; }
 
       /* Điều chỉnh main content để tránh đè lên nav */
       .main-content {
@@ -590,5 +623,6 @@
         }
       };
     </script>
+    <script th:src="@{/js/productManagement.js}"></script>
   </body>
 </html>

@@ -9,6 +9,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sportshop.sportshop.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ import com.sportshop.sportshop.repository.OrderDetailRepository;
 import com.sportshop.sportshop.repository.OrderRepository;
 import com.sportshop.sportshop.service.CartService;
 import com.sportshop.sportshop.service.OrderService;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -32,6 +34,7 @@ public class OrderServiceImpl implements OrderService {
     @Autowired private OrderRepository orderRepository;
     @Autowired private OrderDetailRepository orderDetailRepository;
     @Autowired private OrderMapper orderMapper;
+    @Autowired private ProductRepository productRepository;
 
     // Lấy giỏ để đổ vào Order khi tạo
     @Autowired private CartService cartService;
@@ -197,5 +200,47 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return dailyRevenues;
+    }
+
+    @Transactional
+    @Override
+    public void confirmPaidAndAdjustStock(Long orderId) {
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+
+        // stockAdjusted đang @Transient => sẽ reset khi app restart.
+        // Khuyến nghị đổi sang @Column(name="stock_adjusted") để lưu DB (an toàn chống trừ lặp).
+        if (Boolean.TRUE.equals(order.getStockAdjusted())) {
+            return; // đã trừ kho (trong vòng đời app)
+        }
+
+        var items = order.getItems();
+        if (items == null || items.isEmpty()) {
+            // Không có dòng hàng để trừ kho
+            return;
+        }
+
+        for (OrderDetailEntity d : items) {
+            var product = productRepository.lockById(d.getProduct().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + d.getProduct().getId()));
+
+            long qty = (d.getQuantity() == null ? 0L : d.getQuantity());
+            long current = (product.getQuantity() == null ? 0L : product.getQuantity());
+            long sold    = (product.getQuantitySell() == null ? 0L : product.getQuantitySell());
+
+            if (qty <= 0) continue;
+
+            if (current < qty) {
+                throw new IllegalStateException("Not enough stock for product id=" + product.getId());
+            }
+
+            product.setQuantity(current - qty);
+            product.setQuantitySell(sold + qty);
+            productRepository.save(product);
+        }
+
+        // đánh dấu đã trừ kho (runtime). Khuyên dùng cột DB để bền vững.
+        order.setStockAdjusted(true);
+        orderRepository.save(order);
     }
 }

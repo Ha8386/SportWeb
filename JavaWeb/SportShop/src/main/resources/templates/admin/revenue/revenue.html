@@ -33,6 +33,461 @@
         .card-container .card:nth-child(4){background:linear-gradient(135deg,#8b5cf6 0%, #ec4899 100%)}
         .card::after{content:"";display:block;height:2px;width:100%;background:rgba(255,255,255,.85);margin:6px 0 10px;border-radius:1px}
         .card p{margin:0;font-size:28px;font-weight:800;letter-spacing:.3px}
+
+
+  * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f7fa;
+        color: #333;
+      }
+
+      .container {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* Main content */
+      .main-content {
+        flex: 1;
+        margin-left: 250px;
+        padding: 30px;
+        background: #f5f7fa;
+        animation: slideUp 0.5s ease;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        animation: slideDown 0.5s ease;
+      }
+
+      .header h1 {
+        font-size: 28px;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* Table styling */
+      table {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        margin-top: 20px;
+        border-collapse: collapse;
+      }
+
+      thead {
+        background: var(--primary-gradient);
+        color: white;
+      }
+
+      th,
+      td {
+        padding: 15px;
+        text-align: left;
+      }
+
+      tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #eee;
+      }
+
+      tbody tr:hover {
+        background: rgba(75, 108, 183, 0.05);
+      }
+
+      /* Button styling */
+      .btn {
+        padding: 12px 25px;
+        border-radius: 8px;
+        color: white;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        opacity: 0.9;
+      }
+
+      .create-btn {
+        background: var(--success-gradient);
+      }
+
+      .view-btn {
+        background: var(--primary-gradient);
+        padding: 8px 15px;
+        font-size: 14px;
+      }
+
+      .btn:hover {
+        opacity: 1;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Animations */
+      @keyframes slideDown {
+        from {
+          transform: translateY(-20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .main-content {
+          margin-left: 0;
+          padding: 15px;
+        }
+
+        .header {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        table {
+          display: block;
+          overflow-x: auto;
+        }
+
+        .btn {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+
+      /* Sidebar styles */
+      nav {
+        width: 250px;
+        background: var(--sidebar-gradient);
+        color: white;
+        padding: 20px 0;
+        height: 100vh;
+        position: fixed;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+      }
+
+      nav .logo {
+        text-align: center;
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 20px;
+      }
+
+      nav .logo img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+      }
+
+      nav a {
+        display: flex;
+        padding: 15px 25px;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        align-items: center;
+        border-left: 4px solid transparent;
+      }
+
+      nav a i {
+        margin-right: 10px;
+        width: 20px;
+        font-size: 1.2em;
+      }
+
+      nav a:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: white;
+        border-left: 4px solid #4b6cb7;
+        padding-left: 30px;
+      }
+
+.submenu {
+display: none;
+}
+      ./* Ẩn submenu mặc định */
+.product-menu .submenu{
+   display: none !important;
+  max-height: 0 !important;
+  overflow: hidden;
+  transition: max-height .25s ease;
+  will-change: max-height;
+  background: rgba(0,0,0,0.18);
+  padding: 0; /* đóng thì không padding */
+}
+
+/* Khi JS thêm .active -> xổ xuống + cho cuộn khi dài */
+.product-menu.active .submenu,
+#productSubmenu.active{
+  display: block !important;
+  max-height: 260px !important;
+  overflow-y: auto !important;
+  transition: all 0.3s ease;
+
+  padding: 6px 0;
+}
+
+/* Item con thụt vào như ảnh 1 */
+.product-menu .submenu .nav-link{
+  padding: 12px 25px 12px 55px;
+  font-size: .95em;
+}
+.product-menu .submenu .nav-link:hover{
+  background: rgba(255,255,255,.10);
+  color: #fff;
+}
+
+/* Sidebar tự cuộn nếu cao hơn màn hình */
+nav{ overflow-y: auto; }
+
+      /* Điều chỉnh main content để tránh đè lên nav */
+      .main-content {
+        margin-left: 250px;
+      }
+
+      /* Responsive cho nav */
+      @media (max-width: 768px) {
+        nav {
+          width: 70px;
+        }
+
+        nav a span {
+          display: none;
+        }
+
+        nav .logo {
+          padding: 10px;
+        }
+
+        nav .logo img {
+          width: 40px;
+          height: 40px;
+        }
+
+        .main-content {
+          margin-left: 70px;
+        }
+      }
+
+      /* Action Buttons */
+      .action-btn {
+        padding: 8px 15px;
+        border-radius: 8px;
+        border: none;
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        text-decoration: none;
+        opacity: 0.9;
+        margin-right: 5px;
+      }
+
+      .view-btn {
+        background: var(--primary-gradient);
+      }
+
+      .btn-warning {
+        background: linear-gradient(45deg, #f1c40f, #e67e22);
+      }
+
+      .btn-danger {
+        background: var(--danger-gradient);
+      }
+
+      .action-btn:hover {
+        opacity: 1;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-warning:hover {
+        box-shadow: 0 5px 15px rgba(241, 196, 15, 0.3);
+      }
+
+      .btn-danger:hover {
+        box-shadow: 0 5px 15px rgba(203, 45, 62, 0.3);
+      }
+
+      /* Thêm icons cho các nút */
+      .action-btn i {
+        font-size: 14px;
+      }
+
+      /* Responsive cho các nút */
+      @media (max-width: 768px) {
+        .action-btn {
+          padding: 6px 12px;
+          font-size: 12px;
+        }
+      }
+
+      /* Status Badge Styles */
+      .status-badge {
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+      }
+
+      /* Status Colors */
+      .PENDING {
+        background: linear-gradient(135deg, #f1c40f, #f39c12);
+        color: white;
+      }
+
+      .CONFIRMED {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+      }
+
+      .SHIPPING {
+        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        color: white;
+      }
+
+      .DELIVERED {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+      }
+
+      .CANCELLED {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+      }
+
+      /* Status Change Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        min-width: 300px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        animation: slideIn 0.3s ease;
+      }
+
+      .close {
+        position: absolute;
+        right: 15px;
+        top: 10px;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+        transition: all 0.3s ease;
+      }
+
+      .close:hover {
+        color: #e74c3c;
+      }
+
+      .status-select {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        margin: 15px 0;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+
+      .status-select:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        outline: none;
+      }
+
+      .change-status-btn {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .change-status-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+      }
+
+      /* Animations */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translate(-50%, -60%);
+          opacity: 0;
+        }
+        to {
+          transform: translate(-50%, -50%);
+          opacity: 1;
+        }
+      }
     </style>
 </head>
 <body>
@@ -256,6 +711,6 @@
       }
     })();
 </script>
-
+<script th:src="@{/js/productManagement.js}"></script>
 </body>
 </html>

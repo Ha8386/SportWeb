@@ -4,259 +4,317 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chi Tiết Đơn Hàng</title>
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
     <style>
+        :root {
+          --primary-gradient: linear-gradient(45deg, #4b6cb7, #182848);
+          --secondary-gradient: linear-gradient(45deg, #3494e6, #ec6ead);
+          --success-gradient: linear-gradient(45deg, #11998e, #38ef7d);
+          --danger-gradient: linear-gradient(45deg, #cb2d3e, #ef473a);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            background-color: #f8f9fa;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
+          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+          background: #f5f7fa;
+          color: #333;
+          min-height: 100vh;
+          padding: 30px;
         }
 
-        .order-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            padding: 20px;
+        /* Page Header */
+        .page-header {
+          background: var(--primary-gradient);
+          padding: 25px;
+          border-radius: 15px;
+          margin-bottom: 30px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          color: white;
+          animation: slideDown 0.5s ease;
         }
 
-        .order-header {
-            border-bottom: 2px solid #eee;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-20px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
 
-        .info-section {
-            margin-bottom: 30px;
+        .btn-back {
+          background: rgba(255, 255, 255, 0.2);
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+          text-decoration: none;
+        }
+        .btn-back:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: translateX(-5px);
+          color: white;
+          text-decoration: none;
         }
 
-        .info-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+        /* Table Container */
+        .table-container {
+          background: white;
+          border-radius: 15px;
+          padding: 25px;
+          margin-bottom: 30px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+          animation: slideUp 0.5s ease;
         }
 
-        .info-label {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
 
-        .info-value {
-            color: #2c3e50;
-            font-size: 1.1rem;
-            font-weight: 600;
+        /* Section title */
+        .table-container h5 {
+          color: #2c3e50;
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 20px;
+          padding-bottom: 10px;
+          border-bottom: 2px solid #f1f1f1;
         }
 
-        .product-item {
-            border-bottom: 1px solid #eee;
-            padding: 15px 0;
+        /* Table */
+        .table { margin-bottom: 30px; }
+        .table thead th {
+          background: #f8f9fa;
+          color: #2c3e50;
+          font-weight: 600;
+          border-bottom: 2px solid #eee;
+          padding: 15px;
+        }
+        .table tbody td {
+          padding: 15px;
+          vertical-align: middle;
+        }
+        .table tbody tr { transition: all 0.3s ease; }
+        .table tbody tr:hover {
+          background: #f8f9fa;
+          transform: translateY(-2px);
         }
 
-        .product-item:last-child {
-            border-bottom: none;
-        }
-
+        /* Image */
         .product-image {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            object-fit: cover;
-            margin-right: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+          width: 80px;
+          height: 80px;
+          border-radius: 8px;
+          object-fit: cover;
+          margin-right: 15px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          transition: transform 0.3s ease;
+        }
+        .product-image:hover { transform: scale(1.1); cursor: pointer; }
+
+        /* Modal */
+        .modal-content { border: none; border-radius: 15px; overflow: hidden; }
+        .modal-body { padding: 0; }
+        .modal-body img { width: 100%; height: auto; }
+
+        /* Badges */
+        .price-column { color: #e74c3c; font-weight: 600; }
+        .discount-badge {
+          background: var(--danger-gradient);
+          color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.85rem;
+        }
+        .quantity-badge {
+          background: var(--secondary-gradient);
+          color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.85rem;
         }
 
-        .product-image:hover {
-            transform: scale(1.1);
-            cursor: pointer;
+        /* Order info */
+        .order-info {
+          display: flex; justify-content: space-between; gap: 20px;
+          margin-bottom: 30px; flex-wrap: wrap;
         }
-
-        .modal-content {
-            border: none;
-            border-radius: 15px;
-            overflow: hidden;
+        .info-item {
+          flex: 1; min-width: 200px; background: #f8f9fa; padding: 15px;
+          border-radius: 10px; transition: all 0.3s ease;
         }
-
-        .modal-body {
-            padding: 0;
+        .info-item:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .info-label {
+          color: #666; font-size: 0.9rem; margin-bottom: 5px;
+          display: flex; align-items: center; gap: 8px;
         }
+        .info-label i { color: #3498db; font-size: 1rem; }
+        .info-value { color: #2c3e50; font-size: 1.1rem; font-weight: 600; }
+        .info-item .info-value { word-break: break-word; line-height: 1.4; }
+        .info-item.address { flex: 2; }
 
-        .modal-body img {
-            width: 100%;
-            height: auto;
+        /* QR block */
+        .qr-code-section {
+          text-align: center; margin: 20px 0; padding: 20px; background: #fff;
+          border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .qr-code-section img { max-width: 200px; margin-bottom: 10px; }
+        .qr-code-section p { color: #666; margin-bottom: 10px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+          body { padding: 15px; }
+          .page-header { flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
+          .table-container { padding: 15px; }
+          .table-responsive { font-size: 14px; }
+          .product-image { width: 60px; height: 60px; }
+          .order-info { flex-direction: column; }
+          .info-item { min-width: 100%; }
         }
 
         @media print {
-            body {
-                background: white;
-                padding: 0;
-            }
-            .order-card {
-                box-shadow: none;
-                border: none;
-            }
-            .no-print {
-                display: none !important;
-            }
+          .no-print { display: none !important; }
+          body { background: white; }
+          .page-header { background: none; color: #000; box-shadow: none; }
+          .info-item { box-shadow: none; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="order-card">
-            <div class="order-header">
-                <h2 class="mb-0">Chi Tiết Đơn Hàng #<span th:text="${order.id}"></span></h2>
-            </div>
+<!-- Header -->
+<div class="page-header">
+    <h1 class="h3 mb-0">
+        <i class="fas fa-file-invoice me-2"></i>
+        Chi Tiết Đơn Hàng #<span th:text="${order.id}"></span>
+    </h1>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-primary no-print">
+            <i class="fas fa-print me-2"></i>In
+        </button>
+        <a th:href="@{/user/history}" class="btn btn-secondary btn-back no-print">
+            <i class="fas fa-arrow-left me-2"></i>Quay Lại
+        </a>
+    </div>
+</div>
 
-            <div class="info-section">
-                <h5>Thông Tin Đơn Hàng</h5>
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-calendar-alt"></i> Ngày Mua
-                            </div>
-                            <div class="info-value" th:text="${order.date}"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fa-brands fa-codepen"></i> Số Lượng Sản Phẩm
-                            </div>
-                            <div class="info-value" th:text="${order.quantity}"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fa-solid fa-money-bill"></i> Tổng Tiền
-                            </div>
-                            <div class="info-value" th:text="${order.total + '$'}"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-info-circle"></i> Trạng Thái
-                            </div>
-                            <div class="info-value" th:text="${order.status}"></div>
-                        </div>
-                    </div>
-                </div>
+<!-- Order info -->
+<div class="table-container">
+    <div class="table-responsive">
+        <h5>Thông Tin Đơn Hàng</h5>
+        <div class="order-info">
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-hashtag"></i> Mã Đơn Hàng</div>
+                <div class="info-value" th:text="${order.id}"></div>
             </div>
-
-            <div class="info-section">
-                <h5>Thông Tin Người Nhận</h5>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-user"></i> Tên Người Nhận
-                            </div>
-                            <div class="info-value" th:text="${order.user.username}"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-phone"></i> Số Điện Thoại
-                            </div>
-                            <div class="info-value" th:text="${order.phone}"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-map-marker-alt"></i> Địa Chỉ
-                            </div>
-                            <div class="info-value" th:text="${order.address}"></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-calendar-alt"></i> Ngày Mua</div>
+                <div class="info-value" th:text="${order.date}"></div>
             </div>
+            <div class="info-item">
+                <div class="info-label"><i class="fa-brands fa-codepen"></i> Số Lượng Sản Phẩm</div>
+                <div class="info-value" th:text="${order.quantity}"></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="fa-solid fa-money-bill"></i> Tổng Tiền Đơn Hàng</div>
+                <div class="info-value" th:text="${#numbers.formatDecimal(order.total, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}"></div>
+            </div>
+        </div>
 
-            <div class="info-section">
-                <h5>Chi Tiết Sản Phẩm</h5>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Hình Ảnh</th>
-                                <th>Mã SP</th>
-                                <th>Tên Sản Phẩm</th>
-                                <th>Đơn Giá</th>
-                                <th>Giảm Giá</th>
-                                <th>Số Lượng</th>
-                                <th>Thành Tiền</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="item : ${items}" class="product-item">
-                                <td>
-                                    <img th:if="${!item.product.images.empty}" 
-                                         th:src="${item.product.images[0].imageLink}"
-                                         class="product-image"
-                                         th:onclick="'showImageModal(this)'"
-                                         alt="Product Image" />
-                                </td>
-                                <td>
-                                    <span class="fw-bold text-primary">
-                                        <i class="fas fa-barcode me-1"></i>
-                                        <span th:text="${item.product.id}"></span>
-                                    </span>
-                                </td>
-                                <td th:text="${item.product.name}"></td>
-                                <td>
-                                    <span th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}"></span>
-                                </td>
-                                <td>
-                                    <span class="text-danger">
-                                        <i class="fas fa-tag me-1"></i>
-                                        <span th:text="${item.discount + '%'}"></span>
-                                    </span>
-                                </td>
-                                <td>
-                                    <i class="fas fa-boxes me-1"></i>
-                                    <span th:text="${item.quantity}"></span>
-                                </td>
-                                <td>
-                                    <i class="fas fa-dollar-sign"></i>
-                                    <span th:text="${item.total}"></span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+        <!-- QR (optional) -->
+        <div class="qr-code-section" th:if="${qrCode}">
+            <h5>Mã QR Đơn Hàng</h5>
+            <img th:src="'data:image/png;base64,' + ${qrCode}" alt="QR Code" />
+            <p>Quét mã QR để xem chi tiết đơn hàng</p>
+        </div>
+
+        <!-- Buyer & address -->
+        <h5>Người Mua & Địa Chỉ Nhận Hàng</h5>
+        <div class="order-info">
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-user"></i> Tên Người Mua</div>
+                <div class="info-value" th:text="${order.user.username}"></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label"><i class="fas fa-phone"></i> Số Điện Thoại</div>
+                <div class="info-value" th:text="${order.phone}"></div>
+            </div>
+            <div class="info-item address">
+                <div class="info-label"><i class="fas fa-map-marker-alt"></i> Địa Chỉ Nhận Hàng</div>
+                <div class="info-value" th:text="${order.address}"></div>
+            </div>
+        </div>
+
+        <!-- Items -->
+        <h5>Thông Tin Sản Phẩm</h5>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Hình Ảnh</th>
+                <th>Mã SP</th>
+                <th>Tên Sản Phẩm</th>
+                <th>Đơn Giá</th>
+                <th>Số Lượng</th>
+                <th>Thành Tiền</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${items}">
+                <td>
+                    <img th:if="${!item.product.images.empty}"
+                         th:src="${item.product.images[0].imageLink}"
+                         class="product-image"
+                         th:onclick="'showImageModal(this)'"
+                         alt="Product Image" />
+                </td>
+                <td>
+              <span class="fw-bold text-primary">
+                <i class="fas fa-barcode me-1"></i>
+                <span th:text="${item.product.id}"></span>
+              </span>
+                </td>
+                <td th:text="${item.product.name}"></td>
+                <td class="price-column">
+                    <span th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}"></span>
+                </td>
+                <td>
+              <span class="quantity-badge">
+                <i class="fas fa-boxes me-1"></i>
+                <span th:text="${item.quantity}"></span>
+              </span>
+                </td>
+                <td class="total-price">
+                    <span th:text="${#numbers.formatDecimal(item.total, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}"></span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body">
+                <img id="modalImage" src="" class="img-fluid" alt="Product Image" />
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Image Modal -->
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <img id="modalImage" src="" class="img-fluid" alt="Product Image" />
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function showImageModal(imgElement) {
-            var modal = new bootstrap.Modal(document.getElementById('imageModal'));
-            document.getElementById('modalImage').src = imgElement.src;
-            modal.show();
-        }
-    </script>
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function showImageModal(imgElement) {
+      var modal = new bootstrap.Modal(document.getElementById('imageModal'));
+      document.getElementById('modalImage').src = imgElement.src;
+      modal.show();
+    }
+</script>
 </body>
-</html> 
+</html>

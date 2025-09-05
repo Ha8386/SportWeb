@@ -126,6 +126,7 @@ public class PaymentController {
 
             if ("COD".equalsIgnoreCase(paymentMethod)) {
                 persistTotalIfMissing(orderId, amount);
+                orderService.confirmPaidAndAdjustStock(orderId);
                 orderService.updateStatusOrder(orderId, StatusOrderEnum.Dang_Xu_Ly);
                 clearCartOfOrderOwner(orderId);
                 return "redirect:/user/history";
@@ -190,6 +191,7 @@ public class PaymentController {
                     } catch (NumberFormatException ignore) {}
 
                     persistTotalIfMissing(orderId, amount);
+                    orderService.confirmPaidAndAdjustStock(orderId);
                     orderService.updateStatusOrder(orderId, StatusOrderEnum.Dang_Xu_Ly);
                     clearCartOfOrderOwner(orderId);
 

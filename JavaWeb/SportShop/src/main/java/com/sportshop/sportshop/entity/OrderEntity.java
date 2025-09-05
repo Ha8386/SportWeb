@@ -36,6 +36,10 @@ public class OrderEntity {
     @Column(name = "phone")
     String phone;
 
+    @Transient
+    private Boolean stockAdjusted = false;
+
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status_order")
     StatusOrderEnum status;
