@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Quản Lý Đánh Giá</title>
+
+    <!-- Font Awesome + Sidebar CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}"/>
+
+    <style>
+        :root {
+          --primary-gradient: linear-gradient(45deg, #4b6cb7, #182848);
+          --secondary-gradient: linear-gradient(45deg, #3494e6, #ec6ead);
+          --success-gradient: linear-gradient(45deg, #11998e, #38ef7d);
+          --danger-gradient: linear-gradient(45deg, #cb2d3e, #ef473a);
+          --sidebar-gradient: linear-gradient(180deg, #2c3e50, #1a1a1a);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background:#f8f9fe; color:#333; }
+        .container { display:flex; min-height:100vh; }
+
+        .main-content {
+          flex:1;
+          margin-left:250px;
+          padding:30px;
+          background:#f8f9fe;
+        }
+
+        .header{
+          display:flex; justify-content:space-between; align-items:center;
+          margin-bottom:16px; padding:20px;
+          background:rgba(255,255,255,.95);
+          border-radius:15px; box-shadow:0 4px 12px rgba(0,0,0,.05);
+          animation: slideDown .5s ease;
+        }
+        .header h1{
+          font-size:28px;
+          background:var(--primary-gradient);
+          -webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;
+        }
+        .user-info{
+          display:flex; align-items:center; gap:10px;
+          padding:10px 20px; background:var(--primary-gradient);
+          border-radius:50px; color:#fff; opacity:.9;
+        }
+        .user-info:hover{ opacity:1; }
+
+        table{
+          width:100%;
+          background:rgba(255,255,255,.95);
+          border-radius:15px; overflow:hidden;
+          box-shadow:0 5px 15px rgba(0,0,0,.05);
+          margin-top:12px; border-collapse:collapse;
+        }
+        thead{ background:var(--primary-gradient); color:#fff; }
+        th, td{ padding:15px; text-align:left; }
+        tbody tr{ transition:all .3s ease; border-bottom:1px solid #eee; }
+        tbody tr:hover{ background:rgba(75,108,183,.05); }
+
+        .action-btn{
+          padding:8px 15px; border-radius:8px; border:none; color:#fff; cursor:pointer;
+          transition:all .3s ease; font-size:14px; display:inline-flex; align-items:center;
+          gap:5px; text-decoration:none; opacity:.9; margin-right:5px;
+        }
+        .view-btn{ background:var(--primary-gradient); }
+        .btn-warning{ background:linear-gradient(45deg,#f1c40f,#e67e22); }
+        .btn-danger{ background:var(--danger-gradient); }
+        .action-btn:hover{ opacity:1; transform:translateY(-2px); box-shadow:0 5px 15px rgba(0,0,0,.1); }
+        .action-btn i{ font-size:14px; }
+
+        .rate i{ color:#f1c40f; margin-right:2px; }
+        .reply-badge{
+          display:inline-block; padding:2px 8px; font-size:12px; border-radius:8px;
+          background:#e0f2fe; color:#0369a1; margin-top:6px;
+        }
+        .cell-media{ width:170px; text-align:center; }
+        .media-thumb{ width:120px; height:80px; object-fit:cover; border:1px solid #eee; border-radius:10px; }
+        .media-video{ width:140px; height:90px; border:1px solid #eee; border-radius:10px; }
+
+        .modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:1000; }
+        .modal.show{ display:block; }
+        .modal-content{
+          width:min(560px, 92vw);
+          background:#fff; border-radius:14px; padding:20px;
+          position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);
+          box-shadow:0 10px 30px rgba(0,0,0,.2);
+        }
+        .modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+        .modal-header h5{ border:0; margin:0; }
+        .btn-close{ border:none; background:transparent; font-size:24px; cursor:pointer; color:#666; }
+        .btn-primary{
+          background:var(--primary-gradient); border:none; color:#fff; padding:8px 14px; border-radius:8px; cursor:pointer;
+        }
+        .btn-light{
+          background:#f1f5f9; border:1px solid #e2e8f0; color:#334155; padding:8px 14px; border-radius:8px; cursor:pointer;
+        }
+        .modal-footer{ display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
+
+        @media (max-width: 768px){
+          nav{ width:70px; }
+          nav a span{ display:none; }
+          .main-content{ margin-left:70px; padding:15px; }
+          .header{ flex-direction:column; gap:15px; }
+          table{ display:block; overflow-x:auto; }
+          .action-btn{ padding:6px 12px; font-size:12px; }
+        }
+
+        @keyframes slideDown{ from{ transform:translateY(-20px); opacity:0;} to{ transform:translateY(0); opacity:1;} }
+
+        /* --- flash message --- */
+        .flash-container{
+          margin: 6px 0 14px;
+          position: sticky; top: 0; z-index: 20;
+        }
+        .alert{
+          border-radius:10px; padding:12px 16px;
+          box-shadow:0 6px 16px rgba(0,0,0,.08);
+          transition: opacity .4s ease, transform .4s ease;
+          opacity:1; transform:translateY(0);
+        }
+        .alert.hide{ opacity:0; transform:translateY(-6px); }
+        .alert-success{ background:#eafaf1; color:#14532d; border:1px solid #c7f0d9; }
+        .alert-info{ background:#e0f2fe; color:#075985; border:1px solid #bae6fd; }
+        .alert i{ margin-right:6px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Sidebar -->
+    <nav>
+        <div class="logo">
+            <img th:src="@{/image/logo.jpg}" alt="Logo"/>
+        </div>
+
+        <a href="/admin" class="nav-link">
+            <i class="fas fa-home"></i><span>Trang Quản Trị</span>
+        </a>
+
+        <a href="/admin/user" class="nav-link">
+            <i class="fas fa-users"></i><span>Quản Lý Người Dùng</span>
+        </a>
+
+        <div class="product-menu">
+            <a href="#" class="nav-link" onclick="toggleProductMenu(event)">
+                <div><i class="fas fa-box"></i><span>Quản Lý Sản Phẩm</span></div>
+            </a>
+            <div class="submenu" id="productSubmenu" style="display:none;">
+                <a href="/admin/product" class="nav-link"><i class="fas fa-cube"></i><span>Sản Phẩm</span></a>
+                <a href="/admin/category" class="nav-link"><i class="fas fa-tags"></i><span>Danh Mục</span></a>
+                <a href="/admin/brand" class="nav-link"><i class="fas fa-certificate"></i><span>Thương Hiệu</span></a>
+            </div>
+        </div>
+
+        <a href="/admin/comment" class="nav-link">
+            <i class="fas fa-comments"></i><span>Quản Lý Đánh Giá</span>
+        </a>
+
+        <a href="/admin/order" class="nav-link">
+            <i class="fas fa-shopping-cart"></i><span>Quản Lý Đơn Hàng</span>
+        </a>
+
+        <a href="/admin/revenue" class="nav-link">
+            <i class="fas fa-chart-line"></i><span>Quản Lý Doanh Thu</span>
+        </a>
+
+        <a href="#" class="nav-link" onclick="document.getElementById('logoutForm').submit(); return false;">
+            <i class="fas fa-sign-out-alt"></i><span>Đăng xuất</span>
+        </a>
+        <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;">
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        </form>
+    </nav>
+
+    <!-- Main content -->
+    <div class="main-content">
+        <div class="header">
+            <h1>Quản Lý Đánh Giá</h1>
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i><span>Admin</span>
+            </div>
+        </div>
+
+        <!-- Flash messages (auto hide) -->
+        <div class="flash-container">
+            <div th:if="${param.deleted}" class="alert alert-success auto-hide" role="alert">
+                <i class="fa-solid fa-check-circle"></i>
+                Đã xóa đánh giá #<span th:text="${param.deleted}"></span>.
+            </div>
+            <div th:if="${param.replied}" class="alert alert-info auto-hide" role="alert">
+                <i class="fa-solid fa-info-circle"></i>
+                Đã trả lời đánh giá #<span th:text="${param.replied}"></span>.
+            </div>
+        </div>
+
+        <!-- Bảng đánh giá -->
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tên tài khoản</th>
+                <th>Số sao</th>
+                <th>Nội dung</th>
+                <th class="text-center">Tệp đính kèm</th>
+                <th>Ngày đánh giá</th>
+                <th>Hành động</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="c : ${comments}"
+                th:with="firstUrl=${c.mediaUrl != null ? (c.mediaUrl.contains(',') ? c.mediaUrl.substring(0, c.mediaUrl.indexOf(',')) : c.mediaUrl) : null}">
+                <td th:text="${c.id}">1</td>
+
+                <td>
+                    <i class="fa-regular fa-user"></i>
+                    <span th:text="${c.accountName}">username</span>
+                </td>
+
+                <td class="rate">
+          <span th:each="i : ${#numbers.sequence(1,5)}">
+            <i th:class="${i <= c.rate} ? 'fa-solid fa-star' : 'fa-regular fa-star'"></i>
+          </span>
+                </td>
+
+                <td style="max-width:520px;">
+                    <div th:text="${c.messages}">Nội dung đánh giá...</div>
+                    <div th:if="${c.adminReply != null}" class="reply-badge">
+                        <i class="fa-solid fa-reply"></i> Đã trả lời
+                    </div>
+                </td>
+
+                <td class="cell-media">
+                    <a th:if="${firstUrl != null}" th:href="${firstUrl}" target="_blank" class="d-inline-block">
+                        <img th:if="${firstUrl matches '(?i).+\\.(png|jpe?g|gif)$'}"
+                             th:src="${firstUrl}" alt="attachment" class="media-thumb"/>
+
+                        <video th:if="${firstUrl matches '(?i).+\\.(mp4|webm|ogg)$'}" class="media-video" controls>
+                            <source th:src="${firstUrl}"/>
+                            Trình duyệt không hỗ trợ video.
+                        </video>
+
+                        <span th:if="${!(firstUrl matches '(?i).+\\.(png|jpe?g|gif|mp4|webm|ogg)$')}">
+              <i class="fa-solid fa-paperclip"></i> Tệp
+            </span>
+                    </a>
+                    <span th:if="${firstUrl == null}" class="text-muted">—</span>
+                </td>
+
+                <td th:text="${#dates.format(c.date, 'dd/MM/yyyy HH:mm')}">01/09/2025 10:20</td>
+
+                <td>
+                    <a href="javascript:void(0)" class="action-btn view-btn"
+                       th:attr="data-id=${c.id},data-user=${c.accountName}"
+                       onclick="openReplyModal(this)">
+                        <i class="fa-solid fa-reply"></i> Trả lời
+                    </a>
+
+                    <form th:action="@{'/admin/comment/' + ${c.id} + '/delete'}" method="post"
+                          style="display:inline" onsubmit="return confirm('Xóa đánh giá này?');">
+                        <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" class="action-btn btn-danger">
+                            <i class="fa-solid fa-trash"></i> Xóa
+                        </button>
+                    </form>
+                </td>
+            </tr>
+
+            <!-- Rỗng -->
+            <tr th:if="${#lists.isEmpty(comments)}">
+                <td colspan="7" class="text-center" style="padding:24px; color:#94a3b8;">Chưa có đánh giá nào.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Trả lời -->
+<div id="replyModal" class="modal" aria-hidden="true">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5>Trả lời đánh giá</h5>
+            <button class="btn-close" type="button" aria-label="Đóng" onclick="closeReplyModal()">&times;</button>
+        </div>
+        <form id="replyForm" method="post">
+            <div class="mb-2" style="color:#64748b;">Trả lời cho: <strong id="replyUser">username</strong></div>
+            <textarea name="replyText" rows="6" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:10px;"
+                      placeholder="Nhập nội dung phản hồi..." required></textarea>
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="modal-footer">
+                <button type="button" class="btn-light" onclick="closeReplyModal()">Hủy</button>
+                <button type="submit" class="btn-primary">Gửi phản hồi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Tự ẩn thông báo sau 3 giây
+    window.addEventListener('DOMContentLoaded', function () {
+      const alerts = document.querySelectorAll('.alert.auto-hide');
+      alerts.forEach((el, i) => {
+        setTimeout(() => el.classList.add('hide'), 3000 + i * 200);
+        el.addEventListener('transitionend', () => el.remove());
+      });
+    });
+
+    function toggleProductMenu(e){
+      e.preventDefault();
+      const sub = document.getElementById('productSubmenu');
+      sub.style.display = sub.style.display === 'block' ? 'none' : 'block';
+      return false;
+    }
+
+    function openReplyModal(btn){
+      const id = btn.getAttribute('data-id');
+      const user = btn.getAttribute('data-user');
+      document.getElementById('replyUser').innerText = user;
+      const form = document.getElementById('replyForm');
+      form.setAttribute('action', '/admin/comment/' + id + '/reply');
+      document.getElementById('replyModal').classList.add('show');
+    }
+    function closeReplyModal(){
+      document.getElementById('replyModal').classList.remove('show');
+    }
+</script>
+</body>
+</html>

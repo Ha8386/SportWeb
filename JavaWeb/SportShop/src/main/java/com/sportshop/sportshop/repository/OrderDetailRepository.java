@@ -49,17 +49,55 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetailEntity, 
             @Param("from") LocalDate from,
             @Param("to")   LocalDate to
     );
+
     @Query("""
         select new com.sportshop.sportshop.dto.response.OrderItemRowResponse(
-            o.id, o.date, p.name, od.quantity, od.price, od.total, o.status
+            o.id,
+            o.date,
+            p.name,
+            od.quantity,
+            od.price,
+            od.total,
+            o.status
         )
         from OrderEntity o
-        left join o.items od
-         left join od.product p
+        join o.items od
+        join od.product p
         where o.user.id = :userId
           and o.status   = :status
         order by o.date desc, o.id desc, od.id asc
     """)
     List<OrderItemRowResponse> findUserOrderItemsByStatusDto(@Param("userId") Long userId,
                                                              @Param("status") StatusOrderEnum status);
+
+    // Bản mở rộng (10 tham số) kèm reviewDate = max(c.createDate)
+    @Query("""
+        select new com.sportshop.sportshop.dto.response.OrderItemRowResponse(
+            o.id,
+            o.date,
+            p.name,
+            od.quantity,
+            od.price,
+            od.total,
+            o.status,
+            p.id,
+            od.id,
+            (
+               select max(c.createDate)
+               from CommentEntity c
+               where c.user.id    = o.user.id
+                 and c.product.id = p.id
+            )
+        )
+        from OrderEntity o
+        join o.items od
+        join od.product p
+        where o.user.id = :userId
+          and o.status   = :status
+        order by o.date desc, o.id desc, od.id asc
+    """)
+    List<OrderItemRowResponse> findUserOrderItemsByStatusWithReviewDate(@Param("userId") Long userId,
+                                                                        @Param("status") StatusOrderEnum status);
+
+
 }

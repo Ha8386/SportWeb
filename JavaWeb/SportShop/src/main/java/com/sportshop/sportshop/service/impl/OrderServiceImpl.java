@@ -243,4 +243,43 @@ public class OrderServiceImpl implements OrderService {
         order.setStockAdjusted(true);
         orderRepository.save(order);
     }
+
+    @Transactional
+    @Override
+    public void confirmCancel(Long orderId) {
+        // Nên dùng fetch join / @EntityGraph để lấy kèm items và product
+        OrderEntity order = orderRepository.findByIdFetchItems(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng"));
+
+        if (order.getStatus() != StatusOrderEnum.Yeu_Cau_Huy) {
+            throw new IllegalStateException("Đơn không ở trạng thái yêu cầu hủy");
+        }
+
+        for (OrderDetailEntity item : order.getItems()) {
+            ProductEntity p = item.getProduct();
+            long q = item.getQuantity(); // quantity_product trong bảng orders
+
+            p.setQuantity(p.getQuantity() + q);
+            long sold = p.getQuantitySell() == null ? 0 : p.getQuantitySell();
+            sold = Math.max(sold - q, 0);
+            p.setQuantitySell(sold);
+
+            productRepository.save(p);
+        }
+
+        order.setStatus(StatusOrderEnum.Da_Huy);
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    @Override
+    public void rejectCancel(Long orderId) {
+        OrderEntity order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng"));
+        if (order.getStatus() != StatusOrderEnum.Yeu_Cau_Huy) {
+            throw new IllegalStateException("Đơn không ở trạng thái yêu cầu hủy");
+        }
+        order.setStatus(StatusOrderEnum.Dang_Xu_Ly);
+        orderRepository.save(order);
+    }
 }

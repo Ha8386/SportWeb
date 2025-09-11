@@ -21,7 +21,7 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
                "FROM orders o WHERE o.date BETWEEN :startDate AND :endDate " +
                "GROUP BY DATE(o.date) " +
                "ORDER BY DATE(o.date) ASC", nativeQuery = true)
-    List<Object[]> findRevenueByDay(@Param("startDate") LocalDateTime startDate, 
+    List<Object[]> findRevenueByDay(@Param("startDate") LocalDateTime startDate,
                                 @Param("endDate") LocalDateTime endDate);
     @Query(value = """
         SELECT COALESCE(SUM(o.total),0)
@@ -88,4 +88,12 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
 """)
     List<OrderEntity> findAllWithItemsByUserId(@Param("userId") Long userId);
 
+    @Query("""
+        select distinct o
+        from OrderEntity o
+        left join fetch o.items i
+        left join fetch i.product p
+        where o.id = :id
+    """)
+    Optional<OrderEntity> findByIdFetchItems(@Param("id") Long id);
 }

@@ -24,7 +24,7 @@ public class CommentController {
                           @PathVariable Long productId){
 
         newComment.setUser(getUserAuthentication.getUser());
-        commentService.AddComment(newComment, productId);
+        commentService.addComment(newComment, productId);
         
         return "redirect:/home/product/{productId}";
     }

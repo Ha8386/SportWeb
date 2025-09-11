@@ -470,6 +470,33 @@ nav{ overflow-y: auto; }
           opacity: 1;
         }
       }
+      /* Hàng nút thao tác: luôn nằm 1 dòng */
+  .actions-row{
+    display:flex;
+    align-items:center;
+    gap:10px;          /* khoảng cách giữa các nút */
+    flex-wrap:nowrap;  /* không xuống dòng */
+  }
+  /* Form chứa nút xác nhận phải inline để không chiếm nguyên dòng */
+  .actions-row form{
+    display:inline-block;
+    margin:0;
+  }
+
+  /* Nút xác nhận: màu đỏ gradient */
+  .confirm-btn{
+    background: linear-gradient(180deg,#f36a6a,#d64848);
+    color:#fff;
+    border:1px solid #9f2f2f;
+    border-radius:10px;
+    padding:8px 14px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow: 0 2px 0 rgba(0,0,0,.15);
+  }
+  .confirm-btn i{ margin-right:6px; }
+  .confirm-btn:hover{ filter: brightness(0.95); }
+  .confirm-btn:disabled{ opacity:.6; cursor:not-allowed; }
     </style>
   </head>
   <body>
@@ -555,19 +582,34 @@ nav{ overflow-y: auto; }
                 </span>
               </td>
               <td>
-                <a
-                  th:href="@{/admin/order/{id}(id=${order.id})}"
-                  class="action-btn view-btn"
-                >
-                  <i class="fas fa-eye"></i> Xem
-                </a>
-                <button
-                  class="change-status-btn"
-                  th:onclick="'showStatusModal(' + ${order.id} + ')'"
-                >
-                  <i class="fas fa-edit"></i> Thay Đổi Trạng Thái
-                </button>
+                <div class="actions-row">
+                  <!-- Nút xem -->
+                  <a th:href="@{/admin/order/{id}(id=${order.id})}" class="action-btn view-btn">
+                    <i class="fas fa-eye"></i> Xem
+                  </a>
+
+                  <!-- Nút thay đổi trạng thái -->
+                  <button type="button" class="change-status-btn"
+                          th:onclick="'showStatusModal(' + ${order.id} + ')'">
+                    <i class="fas fa-edit"></i> Thay Đổi Trạng Thái
+                  </button>
+
+                  <!-- Nút xác nhận hủy: chỉ hiện khi Yeu_Cau_Huy -->
+                  <form th:if="${order.status != null and order.status.name() == 'Yeu_Cau_Huy'}"
+                        th:action="@{/admin/order/{id}/confirm-cancel(id=${order.id})}"
+                        method="post"
+                        th:onsubmit="'return confirm(\'Xác nhận hủy đơn #' + ${order.id} + '?\')'">
+                    <input th:if="${_csrf != null}" type="hidden"
+                           th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="confirm-btn">
+                      <i class="fas fa-check"></i> Xác nhận
+                    </button>
+                  </form>
+                </div>
               </td>
+
+
+
             </tr>
           </tbody>
         </table>

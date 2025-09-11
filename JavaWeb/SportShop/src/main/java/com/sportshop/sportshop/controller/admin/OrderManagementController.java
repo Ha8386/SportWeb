@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -15,6 +16,7 @@ import com.sportshop.sportshop.enums.StatusOrderEnum;
 import com.sportshop.sportshop.service.OrderDetailService;
 import com.sportshop.sportshop.service.OrderService;
 import com.sportshop.sportshop.service.QRCodeService;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -69,4 +71,12 @@ public class OrderManagementController {
         orderService.updateStatusOrder(orderId, status);
         return "redirect:/admin/order";
     }
+
+    @PostMapping("/{id}/confirm-cancel")
+    public String confirmCancel(@PathVariable Long id, RedirectAttributes ra) {
+        orderService.confirmCancel(id);
+        ra.addFlashAttribute("message", "Đã hủy đơn #" + id + " và cập nhật tồn kho.");
+        return "redirect:/admin/order";
+    }
+
 }
