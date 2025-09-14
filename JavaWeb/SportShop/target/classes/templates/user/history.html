@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Lịch Sử Mua Hàng - Sport Shop</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
   <style>
     :root{
@@ -38,9 +37,7 @@
       border:1px solid var(--border);
       transition:.2s ease;
     }
-    .nav-pills .nav-link:hover{
-      background:#e6edf5;
-    }
+    .nav-pills .nav-link:hover{ background:#e6edf5; }
     .nav-pills .nav-link.active{
       background:var(--primary);
       border-color:var(--primary);
@@ -61,36 +58,23 @@
       padding:14px 16px;
       vertical-align:middle;
     }
-    .table-hover tbody tr:hover{
-      background:#fafcff;
-    }
+    .table-hover tbody tr:hover{ background:#fafcff; }
     .back-button{
-      display:block;
-      margin:24px auto 0;
-      padding:12px 22px;
-      background:var(--primary);
-      color:#fff;
-      border:none;
-      border-radius:999px;
-      text-decoration:none;
-      width:fit-content;
-      transition:.2s ease;
+      display:block; margin:24px auto 0; padding:12px 22px;
+      background:var(--primary); color:#fff; border:none; border-radius:999px;
+      text-decoration:none; width:fit-content; transition:.2s ease;
     }
     .back-button:hover{
-      background:var(--primary-dark);
-      color:#fff;
-      text-decoration:none;
-      transform:translateY(-1px);
-      box-shadow:0 8px 18px rgba(41,128,185,.25);
+      background:var(--primary-dark); color:#fff; text-decoration:none;
+      transform:translateY(-1px); box-shadow:0 8px 18px rgba(41,128,185,.25);
     }
-    .empty-row{
-      color:var(--muted);
-      padding:32px 0 !important;
-    }
+    .empty-row{ color:var(--muted); padding:32px 0 !important; }
   </style>
 </head>
 <body>
-<div class="container">
+<div class="container" th:with="
+  st=${status != null ? status : (param.status != null ? param.status[0] : 'Dang_Xu_Ly')}
+">
 
   <div th:if="${message}" class="alert alert-success text-center" role="alert">
     <span th:text="${message}"></span>
@@ -104,28 +88,28 @@
   <ul class="nav nav-pills mb-3">
     <li class="nav-item">
       <a class="nav-link"
-         th:classappend="${status}=='Dang_Xu_Ly' ? ' active'"
+         th:classappend="${st}=='Dang_Xu_Ly' ? ' active'"
          th:href="@{/user/history(status='Dang_Xu_Ly')}">
         Đang xử lý
       </a>
     </li>
     <li class="nav-item">
       <a class="nav-link"
-         th:classappend="${status}=='Dang_Giao' ? ' active'"
+         th:classappend="${st}=='Dang_Giao' ? ' active'"
          th:href="@{/user/history(status='Dang_Giao')}">
         Đang giao
       </a>
     </li>
     <li class="nav-item">
       <a class="nav-link"
-         th:classappend="${status}=='Da_Giao' ? ' active'"
+         th:classappend="${st}=='Da_Giao' ? ' active'"
          th:href="@{/user/history(status='Da_Giao')}">
         Đã giao
       </a>
     </li>
     <li class="nav-item">
       <a class="nav-link"
-         th:classappend="${status}=='Da_Huy' ? ' active'"
+         th:classappend="${st}=='Da_Huy' ? ' active'"
          th:href="@{/user/history(status='Da_Huy')}">
         Đã hủy
       </a>
@@ -155,8 +139,8 @@
       <td th:text="${#dates.format(r.orderDate, 'dd/MM/yyyy HH:mm')}">01/08/2025 09:12</td>
       <td th:text="${r.productName}">Tên sản phẩm</td>
       <td class="text-center" th:text="${r.quantity}">1</td>
-      <td class="text-end" th:text="|${#numbers.formatInteger(r.price, 0)} VND|">0 VND</td>
-      <td class="text-end" th:text="|${#numbers.formatInteger(r.total, 0)} VND|">0 VND</td>
+      <td class="text-end" th:text="|${#numbers.formatInteger(r.price, 0)} VNĐ|">0 VNĐ</td>
+      <td class="text-end" th:text="|${#numbers.formatInteger(r.total, 0)} VNĐ|">0 VNĐ</td>
       <td class="text-center">
         <div class="d-flex justify-content-center gap-2">
           <!-- Nút xem chi tiết -->
@@ -164,15 +148,18 @@
              th:href="@{/user/history/{id}(id=${r.orderId})}">
             Xem chi tiết
           </a>
-          <form th:if="${param.status[0]} == 'Dang_Xu_Ly'"
+
+          <!-- Nút Hủy: chỉ khi Đang xử lý -->
+          <form th:if="${st} == 'Dang_Xu_Ly'"
                 th:action="@{/user/history/cancel}" method="post" style="display:inline"
                 th:onsubmit="'return confirm(\'Hủy đơn #'+${r.orderId}+'?\')'">
             <input type="hidden" name="orderId" th:value="${r.orderId}"/>
             <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <button type="submit" class="btn btn-sm btn-outline-danger ms-1">Hủy</button>
           </form>
-          <!-- Nút Đánh giá: chỉ hiện khi đã giao -->
-          <button th:if="${param.status[0]} == 'Da_Giao'"
+
+          <!-- Nút Đánh giá: chỉ khi ĐÃ GIAO -->
+          <button th:if="${st} == 'Da_Giao'"
                   type="button"
                   class="btn btn-sm btn-outline-success"
                   data-bs-toggle="modal"
@@ -181,19 +168,16 @@
             Đánh giá
           </button>
 
-
-          <!-- Nút Hoàn hàng -->
-          <form th:if="${param.status[0]} == 'Da_Giao'"
+          <!-- Nút Hoàn hàng: chỉ khi ĐÃ GIAO -->
+          <form th:if="${st} == 'Da_Giao'"
                 th:action="@{/user/orders/return}" method="post" style="display:inline"
                 th:onsubmit="'return confirm(\'Hoàn hàng đơn #'+${r.orderId}+'?\')'">
             <input type="hidden" name="orderId" th:value="${r.orderId}"/>
-            <input th:if="${_csrf != null}" type="hidden"
-                   th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <button type="submit" class="btn btn-sm btn-outline-warning">Hoàn hàng</button>
           </form>
         </div>
       </td>
-
     </tr>
     </tbody>
   </table>
@@ -202,6 +186,7 @@
     <i class="fas fa-arrow-left me-2"></i> Quay lại trang chủ
   </a>
 </div>
+
 <!-- Modal Đánh giá -->
 <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -216,10 +201,8 @@
 
         <div class="modal-body">
           <input type="hidden" name="productId" />
-
           <!-- CSRF -->
-          <input th:if="${_csrf != null}" type="hidden"
-                 th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
           <!-- Tên sản phẩm -->
           <div class="mb-3">
@@ -239,9 +222,7 @@
             </div>
             <style>
               .rating input{ display:none; }
-              .rating label{
-                font-size:28px; cursor:pointer; padding:0 4px; color:#ddd; transition:.15s;
-              }
+              .rating label{ font-size:28px; cursor:pointer; padding:0 4px; color:#ddd; transition:.15s; }
               .rating input:checked ~ label, .rating label:hover, .rating label:hover ~ label{ color:#f5c518; }
             </style>
           </div>
@@ -256,25 +237,19 @@
           <!-- Ảnh/Video -->
           <div class="mb-2">
             <label class="form-label">Ảnh/Video minh họa (tùy chọn)</label>
-            <input class="form-control" type="file" name="media" multiple
-                   accept="image/*,video/*">
+            <input class="form-control" type="file" name="media" multiple accept="image/*,video/*">
             <div class="form-text">Có thể chọn nhiều file. Hỗ trợ ảnh & video.</div>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-            Quay lại
-          </button>
-          <button type="submit" class="btn btn-primary">
-            Hoàn thành
-          </button>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Quay lại</button>
+          <button type="submit" class="btn btn-primary">Hoàn thành</button>
         </div>
       </form>
     </div>
   </div>
 </div>
-
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -290,8 +265,9 @@
       form.querySelector('textarea[name="messages"]').value = '';
       const filesInput = form.querySelector('input[name="media"]');
       if (filesInput) filesInput.value = '';
-      // mặc định 5 sao? nếu muốn:
-      form.querySelector('#star5').checked = true;
+      // mặc định 5 sao (nếu muốn)
+      const star5 = form.querySelector('#star5');
+      if (star5) star5.checked = true;
 
       form.querySelector('input[name="productId"]').value = productId;
       reviewModalEl.querySelector('[data-field="productName"]').value = productName;
